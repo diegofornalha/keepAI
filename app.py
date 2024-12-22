@@ -1,50 +1,51 @@
-import flet as ft
-from datetime import datetime, UTC
+from flask import Flask, request, jsonify, render_template, send_from_directory
 import os
-from dotenv import load_dotenv
-from supabase import create_client, Client
-from ui import NotasUI
+from main import main
+from server.config.settings import get_supabase_client
 
-# Carrega as variáveis de ambiente
-load_dotenv()
-
-# Configuração do Supabase
-supabase: Client = create_client(
-    os.getenv('SUPABASE_URL'),
-    os.getenv('SUPABASE_KEY')
+app = Flask(__name__, 
+    template_folder='server/templates',
+    static_folder='server/static'
 )
 
-class DatabaseController:
-    def __init__(self):
-        self.supabase = supabase
+# Inicializa o agente
+agent = main()
 
-    def get_all_notes(self):
-        response = self.supabase.table('notas').select("*").order('data_criacao', desc=True).execute()
-        return response.data
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-    def add_note(self, titulo, conteudo):
-        data = {
-            'titulo': titulo,
-            'conteudo': conteudo,
-            'data_criacao': datetime.now(UTC).isoformat()
-        }
-        self.supabase.table('notas').insert(data).execute()
+@app.route('/favicon.svg')
+def favicon():
+    return send_from_directory(app.static_folder, 'favicon.svg', mimetype='image/svg+xml')
 
-    def delete_note(self, nota_id):
-        try:
-            self.supabase.table('notas').delete().eq('id', nota_id).execute()
-            return True
-        except Exception:
-            return False
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    message = request.json.get('message', '')
+    try:
+        response = agent.run(message)
+        return jsonify({'response': response})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-def init_db():
-    # Não precisamos criar tabelas manualmente no Supabase
-    pass
-
-def main(page: ft.Page):
-    db_controller = DatabaseController()
-    NotasUI(page, db_controller)
+@app.route('/api/notes')
+def get_notes():
+    try:
+        # Obtém o cliente Supabase usando a função do settings
+        supabase = get_supabase_client()
+        
+        # Busca todas as notas ordenadas por data
+        result = supabase.table('notes').select('*').order('data', desc=True).execute()
+        
+        # Retorna os dados diretamente
+        return jsonify({
+            'response': result.data
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    init_db()
-    ft.app(target=main)
+    # Obtém a porta do ambiente ou usa 3000 como padrão
+    port = int(os.environ.get('PORT', 3000))
+    # Executa o app Flask
+    app.run(host='0.0.0.0', port=port, debug=True)
