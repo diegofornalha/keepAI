@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>KeepAI - Seu Assistente Pessoal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
@@ -110,6 +112,9 @@
         let currentNoteId = null;
         let editingNoteId = null;
 
+        // Configuração do token CSRF
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
         // Função para formatar a data no padrão brasileiro
         function formatarDataBrasil(data) {
             const date = new Date(data);
@@ -137,7 +142,7 @@
             }, 300);
         }
 
-        // Função para enviar mensagem
+        // Função para enviar mensagem com token CSRF
         async function sendMessage() {
             const input = document.getElementById('user-input');
             const message = input.value.trim();
@@ -151,17 +156,21 @@
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
                     },
                     body: JSON.stringify({ message })
                 });
 
+                if (!response.ok) {
+                    throw new Error('Erro na requisição');
+                }
+
                 const data = await response.json();
                 appendMessage('assistant', data.response);
-                await loadNotes();
             } catch (error) {
                 console.error('Erro:', error);
-                appendMessage('error', 'Me perdoa, algo deu errado... tente novamente!');
+                appendMessage('error', 'Desculpe, ocorreu um erro ao processar sua mensagem.');
             } finally {
                 hideLoading();
             }
@@ -177,24 +186,49 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // Função para carregar notas
+        // Função para carregar notas com token CSRF
         async function loadNotes() {
-            showLoading();
             try {
-                const response = await fetch('/api/notes');
-                const data = await response.json();
-                const notesContainer = document.getElementById('notes-container');
-                notesContainer.innerHTML = '';
-                
-                if (data && data.response && Array.isArray(data.response)) {
-                    data.response.sort((a, b) => new Date(b.data) - new Date(a.data));
-                    data.response.forEach(note => addNoteToContainer(note));
+                const response = await fetch('/api/notes', {
+                    headers: {
+                        'X-CSRF-Token': csrfToken
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar notas');
                 }
+
+                const data = await response.json();
+                displayNotes(data.response);
             } catch (error) {
                 console.error('Erro ao carregar notas:', error);
-            } finally {
-                hideLoading();
             }
+        }
+
+        // Função para exibir as notas
+        function displayNotes(notes) {
+            const notesContainer = document.getElementById('notes-container');
+            notesContainer.innerHTML = ''; // Limpa o container
+
+            notes.forEach(note => {
+                const noteDiv = document.createElement('div');
+                noteDiv.className = 'note';
+                noteDiv.innerHTML = `
+                    <div class="note-header">
+                        <h3>${note.titulo}</h3>
+                        <div class="note-actions">
+                            <button onclick="showEditNoteModal(${note.id}, '${note.titulo}', '${note.conteudo}')" class="edit-btn">✏️</button>
+                            <button onclick="showDeleteNoteModal(${note.id})" class="delete-btn">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="note-content">${note.conteudo}</div>
+                    <div class="note-footer">
+                        <span class="note-date">${formatarDataBrasil(note.data)}</span>
+                    </div>
+                `;
+                notesContainer.appendChild(noteDiv);
+            });
         }
 
         // Função para processar texto das notas
@@ -255,47 +289,31 @@
             notesContainer.appendChild(noteDiv);
         }
 
-        // Função para escapar caracteres HTML
+        // Função para escapar HTML (prevenção XSS)
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        // Função para escapar caracteres especiais em expressões regulares
+        // Função para escapar expressões regulares
         function escapeRegExp(string) {
             return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
 
-        // Funções do Modal de Criação
-        function showCreateNoteModal() {
-            document.getElementById('createNoteModal').style.display = 'flex';
-            document.getElementById('noteTitle').focus();
-        }
-
-        function hideCreateNoteModal() {
-            document.getElementById('createNoteModal').style.display = 'none';
-            document.getElementById('noteTitle').value = '';
-            document.getElementById('noteContent').value = '';
-        }
-
-        // Funções do Modal de Edição
+        // Funções para manipulação de notas
         function showEditNoteModal(id, title, content) {
             editingNoteId = id;
-            document.getElementById('editNoteModal').style.display = 'flex';
             document.getElementById('editNoteTitle').value = title;
             document.getElementById('editNoteContent').value = content;
-            document.getElementById('editNoteTitle').focus();
+            document.getElementById('editNoteModal').style.display = 'flex';
         }
 
         function hideEditNoteModal() {
             document.getElementById('editNoteModal').style.display = 'none';
-            document.getElementById('editNoteTitle').value = '';
-            document.getElementById('editNoteContent').value = '';
             editingNoteId = null;
         }
 
-        // Funções do Modal de Deleção
         function showDeleteNoteModal(id) {
             currentNoteId = id;
             document.getElementById('deleteNoteModal').style.display = 'flex';
@@ -306,34 +324,51 @@
             currentNoteId = null;
         }
 
+        function showCreateNoteModal() {
+            document.getElementById('createNoteModal').style.display = 'flex';
+        }
+
+        function hideCreateNoteModal() {
+            document.getElementById('createNoteModal').style.display = 'none';
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+        }
+
         // Função para criar nota
         async function createNote() {
-            const title = document.getElementById('noteTitle').value;
-            const content = document.getElementById('noteContent').value;
-            
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+
             if (!title || !content) {
-                alert('Por favor, preencha todos os campos');
+                alert('Por favor, preencha todos os campos.');
                 return;
             }
 
             showLoading();
             try {
-                const message = `criar nota com título "${title}" e conteúdo "${content}"`;
-                const response = await fetch('/api/chat', {
+                const response = await fetch('/api/notes', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
                     },
-                    body: JSON.stringify({ message })
+                    body: JSON.stringify({
+                        titulo: title,
+                        conteudo: content
+                    })
                 });
 
-                const data = await response.json();
-                appendMessage('assistant', data.response);
+                if (!response.ok) {
+                    throw new Error('Erro ao criar nota');
+                }
+
                 hideCreateNoteModal();
-                await loadNotes();
+                document.getElementById('noteTitle').value = '';
+                document.getElementById('noteContent').value = '';
+                loadNotes();
             } catch (error) {
                 console.error('Erro ao criar nota:', error);
-                alert('Erro ao criar nota');
+                alert('Erro ao criar nota. Por favor, tente novamente.');
             } finally {
                 hideLoading();
             }
@@ -341,57 +376,63 @@
 
         // Função para atualizar nota
         async function updateNote() {
-            const title = document.getElementById('editNoteTitle').value;
-            const content = document.getElementById('editNoteContent').value;
-            
+            const title = document.getElementById('editNoteTitle').value.trim();
+            const content = document.getElementById('editNoteContent').value.trim();
+
             if (!title || !content) {
-                alert('Por favor, preencha todos os campos');
+                alert('Por favor, preencha todos os campos.');
                 return;
             }
 
             showLoading();
             try {
-                const message = `atualizar nota ${editingNoteId} com título "${title}" e conteúdo "${content}"`;
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
+                const response = await fetch(`/api/notes/${editingNoteId}`, {
+                    method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
                     },
-                    body: JSON.stringify({ message })
+                    body: JSON.stringify({
+                        titulo: title,
+                        conteudo: content
+                    })
                 });
 
-                const data = await response.json();
-                appendMessage('assistant', data.response);
+                if (!response.ok) {
+                    throw new Error('Erro ao atualizar nota');
+                }
+
                 hideEditNoteModal();
-                await loadNotes();
+                loadNotes();
             } catch (error) {
                 console.error('Erro ao atualizar nota:', error);
-                alert('Erro ao atualizar nota');
+                alert('Erro ao atualizar nota. Por favor, tente novamente.');
             } finally {
                 hideLoading();
             }
         }
 
-        // Função para deletar nota
         async function confirmDeleteNote() {
+            if (!currentNoteId) return;
+
             showLoading();
             try {
-                const message = `deletar nota ${currentNoteId}`;
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
+                const response = await fetch(`/api/notes/${currentNoteId}`, {
+                    method: 'DELETE',
                     headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message })
+                        'X-CSRF-Token': csrfToken
+                    }
                 });
 
-                const data = await response.json();
-                appendMessage('assistant', data.response);
+                if (!response.ok) {
+                    throw new Error('Erro ao deletar nota');
+                }
+
                 hideDeleteNoteModal();
-                await loadNotes();
+                loadNotes();
             } catch (error) {
                 console.error('Erro ao deletar nota:', error);
-                alert('Erro ao deletar nota');
+                alert('Erro ao deletar nota. Por favor, tente novamente.');
             } finally {
                 hideLoading();
             }
@@ -404,8 +445,8 @@
             }
         });
 
-        // Carrega as notas ao iniciar
-        loadNotes();
+        // Carrega as notas ao iniciar a página
+        document.addEventListener('DOMContentLoaded', loadNotes);
     </script>
 </body>
 </html> 

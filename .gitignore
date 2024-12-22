@@ -36,3 +36,44 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+/logs
+
+# Ambiente e credenciais
+.env
+.env.*
+!.env.example
+
+# Certificados SSL
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+# Arquivos do Loki
+loki/wal/
+loki/chunks/
+loki/tsdb-shipper-active/
+
+# Cache e logs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.log
+logs/
+
+# Ambiente virtual Python
+venv/
+.venv/
+env/
+.env/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

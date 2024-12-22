@@ -1,0 +1,47 @@
+groups:
+  - name: keepai_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alta taxa de erros"
+          description: "A taxa de erros está acima de 1% nos últimos 5 minutos"
+
+      - alert: HighCPUUsage
+        expr: cpu_usage > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alto uso de CPU"
+          description: "O uso da CPU está acima de 80% nos últimos 5 minutos"
+
+      - alert: HighMemoryUsage
+        expr: memory_usage > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alto uso de memória"
+          description: "O uso de memória está acima de 80% nos últimos 5 minutos"
+
+      - alert: LowCacheHitRate
+        expr: rate(cache_hits_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])) * 100 < 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Baixa taxa de acerto do cache"
+          description: "A taxa de acerto do cache está abaixo de 90% nos últimos 5 minutos"
+
+      - alert: HighLatency
+        expr: http_request_duration_seconds > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alta latência"
+          description: "A latência está acima de 500ms nos últimos 5 minutos"
