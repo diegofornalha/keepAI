@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeepAI - Seu Assistente Pessoal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="container">
+        <!-- Seção de Chat -->
+        <div class="chat-section">
+            <div class="chat-container" id="chat-container">
+                <!-- Mensagens serão adicionadas aqui -->
+            </div>
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Digite sua mensagem..." autofocus>
+                <button onclick="sendMessage()">Enviar</button>
+            </div>
+        </div>
+
+        <!-- Seção de Notas -->
+        <div class="notes-section">
+            <div class="notes-header">
+                <h2>📝 Suas Notas</h2>
+                <button onclick="showCreateNoteModal()" class="new-note-btn">+ Nova Nota</button>
+            </div>
+            <div class="notes-container" id="notes-container">
+                <!-- Notas serão adicionadas aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Criação de Nota -->
+    <div id="createNoteModal" class="modal">
+        <div class="modal-content">
+            <h2>Nova Nota</h2>
+            <input type="text" id="noteTitle" placeholder="Título">
+            <textarea id="noteContent" placeholder="Conteúdo"></textarea>
+            <div class="modal-buttons">
+                <button onclick="hideCreateNoteModal()">Cancelar</button>
+                <button onclick="createNote()">Criar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição de Nota -->
+    <div id="editNoteModal" class="modal">
+        <div class="modal-content">
+            <h2>Editar Nota</h2>
+            <input type="text" id="editNoteTitle" placeholder="Título">
+            <textarea id="editNoteContent" placeholder="Conteúdo"></textarea>
+            <div class="modal-buttons">
+                <button onclick="hideEditNoteModal()">Cancelar</button>
+                <button onclick="updateNote()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Deleção -->
+    <div id="deleteNoteModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmar Deleção</h2>
+            <p>Tem certeza que deseja deletar esta nota?</p>
+            <div class="modal-buttons">
+                <button onclick="hideDeleteNoteModal()">Cancelar</button>
+                <button onclick="confirmDeleteNote()" class="delete-btn">Deletar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentNoteId = null;
+        let editingNoteId = null;
+
+        // Função para formatar a data no padrão brasileiro
+        function formatarDataBrasil(data) {
+            const date = new Date(data);
+            return date.toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Função para mostrar/esconder loading
+        function showLoading() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'flex';
+            loading.style.opacity = '1';
+        }
+        
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            loading.style.opacity = '0';
+            setTimeout(() => {
+                loading.style.display = 'none';
+            }, 300);
+        }
+
+        // Função para enviar mensagem
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            input.value = '';
+            appendMessage('user', message);
+            
+            showLoading();
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                appendMessage('assistant', data.response);
+                await loadNotes();
+            } catch (error) {
+                console.error('Erro:', error);
+                appendMessage('error', 'Erro ao enviar mensagem');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Função para adicionar mensagem ao chat
+        function appendMessage(type, content) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            messageDiv.textContent = content;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Função para carregar notas
+        async function loadNotes() {
+            showLoading();
+            try {
+                const response = await fetch('/api/notes');
+                const data = await response.json();
+                const notesContainer = document.getElementById('notes-container');
+                notesContainer.innerHTML = '';
+                
+                if (data && data.response && Array.isArray(data.response)) {
+                    data.response.sort((a, b) => new Date(b.data) - new Date(a.data));
+                    data.response.forEach(note => addNoteToContainer(note));
+                }
+            } catch (error) {
+                console.error('Erro ao carregar notas:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Função para processar texto das notas
+        function processNotesText(notesText) {
+            const lines = notesText.split('\n');
+            let currentNote = null;
+            
+            for (const line of lines) {
+                if (line.startsWith('#')) {
+                    if (currentNote) {
+                        addNoteToContainer(currentNote);
+                    }
+                    const match = line.match(/#(\d+) - (.*?) \((.*?)\)/);
+                    if (match) {
+                        currentNote = {
+                            id: match[1],
+                            titulo: match[2],
+                            data: match[3],
+                            conteudo: ''
+                        };
+                    }
+                } else if (currentNote && line.trim()) {
+                    currentNote.conteudo += line + '\n';
+                }
+            }
+            
+            if (currentNote) {
+                addNoteToContainer(currentNote);
+            }
+        }
+
+        // Função para adicionar nota ao container
+        function addNoteToContainer(note) {
+            const notesContainer = document.getElementById('notes-container');
+            const noteDiv = document.createElement('div');
+            noteDiv.className = 'note';
+            
+            // Limpa o conteúdo removendo IDs e título duplicado
+            let cleanContent = note.conteudo;
+            // Remove números no início do conteúdo (IDs)
+            cleanContent = cleanContent.replace(/^\d+[\s\n]*/, '');
+            // Remove o título se ele estiver no início do conteúdo
+            cleanContent = cleanContent.replace(new RegExp('^' + escapeRegExp(note.titulo) + '[\s\n]*'), '');
+            // Remove linhas em branco extras
+            cleanContent = cleanContent.trim();
+            
+            noteDiv.innerHTML = `
+                <div class="note-header">
+                    <h3>${escapeHtml(note.titulo)}</h3>
+                    <div class="note-actions">
+                        <button onclick="showEditNoteModal('${note.id}', '${escapeHtml(note.titulo)}', \`${escapeHtml(cleanContent)}\`)">✏️</button>
+                        <button onclick="showDeleteNoteModal(${note.id})">🗑️</button>
+                    </div>
+                </div>
+                <div class="note-date">${formatarDataBrasil(note.data)}</div>
+                <div class="note-content">${escapeHtml(cleanContent)}</div>
+            `;
+            notesContainer.appendChild(noteDiv);
+        }
+
+        // Função para escapar caracteres HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Função para escapar caracteres especiais em expressões regulares
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Funções do Modal de Criação
+        function showCreateNoteModal() {
+            document.getElementById('createNoteModal').style.display = 'flex';
+            document.getElementById('noteTitle').focus();
+        }
+
+        function hideCreateNoteModal() {
+            document.getElementById('createNoteModal').style.display = 'none';
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+        }
+
+        // Funções do Modal de Edição
+        function showEditNoteModal(id, title, content) {
+            editingNoteId = id;
+            document.getElementById('editNoteModal').style.display = 'flex';
+            document.getElementById('editNoteTitle').value = title;
+            document.getElementById('editNoteContent').value = content;
+            document.getElementById('editNoteTitle').focus();
+        }
+
+        function hideEditNoteModal() {
+            document.getElementById('editNoteModal').style.display = 'none';
+            document.getElementById('editNoteTitle').value = '';
+            document.getElementById('editNoteContent').value = '';
+            editingNoteId = null;
+        }
+
+        // Funções do Modal de Deleção
+        function showDeleteNoteModal(id) {
+            currentNoteId = id;
+            document.getElementById('deleteNoteModal').style.display = 'flex';
+        }
+
+        function hideDeleteNoteModal() {
+            document.getElementById('deleteNoteModal').style.display = 'none';
+            currentNoteId = null;
+        }
+
+        // Função para criar nota
+        async function createNote() {
+            const title = document.getElementById('noteTitle').value;
+            const content = document.getElementById('noteContent').value;
+            
+            if (!title || !content) {
+                alert('Por favor, preencha todos os campos');
+                return;
+            }
+
+            showLoading();
+            try {
+                const message = `criar nota com título "${title}" e conteúdo "${content}"`;
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                appendMessage('assistant', data.response);
+                hideCreateNoteModal();
+                await loadNotes();
+            } catch (error) {
+                console.error('Erro ao criar nota:', error);
+                alert('Erro ao criar nota');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Função para atualizar nota
+        async function updateNote() {
+            const title = document.getElementById('editNoteTitle').value;
+            const content = document.getElementById('editNoteContent').value;
+            
+            if (!title || !content) {
+                alert('Por favor, preencha todos os campos');
+                return;
+            }
+
+            showLoading();
+            try {
+                const message = `atualizar nota ${editingNoteId} com título "${title}" e conteúdo "${content}"`;
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                appendMessage('assistant', data.response);
+                hideEditNoteModal();
+                await loadNotes();
+            } catch (error) {
+                console.error('Erro ao atualizar nota:', error);
+                alert('Erro ao atualizar nota');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Função para deletar nota
+        async function confirmDeleteNote() {
+            showLoading();
+            try {
+                const message = `deletar nota ${currentNoteId}`;
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                appendMessage('assistant', data.response);
+                hideDeleteNoteModal();
+                await loadNotes();
+            } catch (error) {
+                console.error('Erro ao deletar nota:', error);
+                alert('Erro ao deletar nota');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Event listener para o Enter no input
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Carrega as notas ao iniciar
+        loadNotes();
+    </script>
+</body>
+</html> 
