@@ -9,5 +9,5 @@ def register_routes(app: Flask) -> None:
     app.register_blueprint(main_bp)
 
     # Registra os outros blueprints com seus prefixos
-    app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(auth_bp)
     app.register_blueprint(api_v1_bp, url_prefix="/api/v1")

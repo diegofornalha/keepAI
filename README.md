@@ -54,20 +54,13 @@ git clone https://github.com/seu-usuario/keepai.git
 cd keepai
 ```
 
-2. Configure as variáveis de ambiente:
-
-```bash
-cp .env.example .env
-# Edite o arquivo .env com suas credenciais
-```
-
-3. Inicie o container:
+2. Inicie o container:
 
 ```bash
 docker compose up -d
 ```
 
-4. Acesse o aplicativo em `http://localhost:5001`
+3. Acesse o aplicativo em `http://localhost:5001`
 
 ## Desenvolvimento
 
