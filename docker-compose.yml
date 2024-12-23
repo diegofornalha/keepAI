@@ -1,52 +1,18 @@
-version: '3.8'
-
 services:
-  web:
-    build: .
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "5001:5000"
+    volumes:
+      - ./server/templates:/app/templates
+      - ./server/static:/app/static
+      - ./server/config:/app/server/config
+      - ./app.py:/app/app.py
     environment:
-      - FLASK_APP=app.py
       - FLASK_ENV=development
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/keepai
-    volumes:
-      - ./server:/app/server
-      - ./client:/app/client
-    depends_on:
-      - db
-    networks:
-      - keepai-network
-
-  db:
-    image: postgres:13
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=keepai
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - keepai-network
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./client/build:/usr/share/nginx/html
-    depends_on:
-      - web
-    networks:
-      - keepai-network
-
-networks:
-  keepai-network:
-    driver: bridge
-
-volumes:
-  postgres_data:
-  redis_data:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+    stdin_open: true
+    tty: true

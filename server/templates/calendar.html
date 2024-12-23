@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Calendário{% endblock %}
+
+{% block page_title %}Calendário{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Meu Calendário</h5>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newEventModal">
+                        <i class="bi bi-plus-lg"></i> Novo Evento
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Evento -->
+<div class="modal fade" id="newEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newEventForm">
+                    <div class="mb-3">
+                        <label for="eventTitle" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="eventTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventDate" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="eventDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventTime" class="form-label">Hora</label>
+                        <input type="time" class="form-control" id="eventTime">
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventDescription" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="eventDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="newEventForm" class="btn btn-primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const CalendarApp = {
+        init() {
+            this.bindEvents();
+        },
+
+        bindEvents() {
+            const form = document.getElementById('newEventForm');
+            form.addEventListener('submit', this.handleNewEvent.bind(this));
+        },
+
+        handleNewEvent(e) {
+            e.preventDefault();
+            // Implementar lógica de criação de evento
+            const formData = new FormData(e.target);
+            console.log('Novo evento:', Object.fromEntries(formData));
+            
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newEventModal'));
+            modal.hide();
+            
+            // Mostrar mensagem de sucesso
+            showToast('Evento criado com sucesso!', 'success');
+        }
+    };
+
+    CalendarApp.init();
+});
+</script>
+{% endblock %} 

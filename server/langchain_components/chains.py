@@ -5,19 +5,20 @@ from typing import Dict, Any
 import json
 import os
 
+
 class NoteProcessingChain:
     def __init__(self):
-        google_api_key = os.getenv('GOOGLE_API_KEY')
+        google_api_key = os.getenv("GOOGLE_API_KEY")
         if not google_api_key:
             raise ValueError("GOOGLE_API_KEY não encontrada nas variáveis de ambiente")
-            
+
         self.llm = ChatGoogleGenerativeAI(
             temperature=0,
             model="gemini-pro",
             google_api_key=google_api_key,
-            convert_system_message_to_human=True
+            convert_system_message_to_human=True,
         )
-        
+
         self.prompt = PromptTemplate(
             input_variables=["note_content"],
             template="""
@@ -38,11 +39,11 @@ class NoteProcessingChain:
                 "summary": "",
                 "priority": ""
             }
-            """
+            """,
         )
-        
+
         self.chain = LLMChain(llm=self.llm, prompt=self.prompt)
-    
+
     async def process(self, note_content: str) -> Dict[str, Any]:
         try:
             result = await self.chain.arun(note_content=note_content)
@@ -57,7 +58,7 @@ class NoteProcessingChain:
                     "keywords": [],
                     "actions": [],
                     "summary": "Erro ao processar nota",
-                    "priority": "Média"
+                    "priority": "Média",
                 }
         except Exception as e:
             return {
@@ -66,5 +67,5 @@ class NoteProcessingChain:
                 "keywords": [],
                 "actions": [],
                 "summary": "Erro ao processar nota",
-                "priority": "Média"
+                "priority": "Média",
             }

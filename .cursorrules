@@ -1,1 +1,73 @@
-Responda em portugues do brasil leve em consideração sempre que estou usando mac, ao inves de vc me pedir para executar, lembre de sempre rodar o docker-compose up --build quando finalizar as edicoes pelo e finalizar a correção dos erros, o agent vai rodar o comando dentro do composer. pode rodar o comando no terminal pelo composer?
+{
+  "clusters": {
+    "frontend": {
+      "root": "client/src",
+      "patterns": [
+        "features/*/components/*.tsx",
+        "features/*/hooks/*.ts",
+        "features/*/services/*.ts",
+        "features/*/types/*.ts",
+        "features/*/utils/*.ts",
+        "features/*/store/*.ts"
+      ],
+      "dependencies": [
+        "api"
+      ]
+    },
+    "backend": {
+      "root": "server",
+      "patterns": [
+        "api/*/*.py",
+        "core/*/*.py",
+        "services/*/*.py",
+        "models/*.py",
+        "utils/*.py"
+      ],
+      "dependencies": [
+        "database"
+      ]
+    },
+    "api": {
+      "root": "client/src/api",
+      "patterns": [
+        "endpoints/*.ts",
+        "interceptors/*.ts",
+        "types/*.ts"
+      ]
+    },
+    "database": {
+      "root": "server/database",
+      "patterns": [
+        "migrations/*.py",
+        "models/*.py",
+        "repositories/*.py"
+      ]
+    },
+    "infrastructure": {
+      "root": "infra",
+      "patterns": [
+        "docker/*",
+        "nginx/*",
+        "scripts/*"
+      ]
+    }
+  },
+  "rules": {
+    "dependencies": {
+      "enforce": true,
+      "circular": false
+    },
+    "boundaries": {
+      "enforce": true,
+      "exceptions": [
+        "tests/**/*"
+      ]
+    },
+    "naming": {
+      "components": "^[A-Z][a-zA-Z]+$",
+      "hooks": "^use[A-Z][a-zA-Z]+$",
+      "services": "^[a-z]+Service$",
+      "types": "^[A-Z][a-zA-Z]+Type$"
+    }
+  }
+}

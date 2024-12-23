@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Tarefas{% endblock %}
+
+{% block page_title %}Tarefas{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Minhas Tarefas</h5>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                        <i class="bi bi-plus-lg"></i> Nova Tarefa
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="tasks-list" class="tasks-container">
+                        <!-- Lista de tarefas será carregada aqui -->
+                        <div class="task-group mb-4">
+                            <h6 class="mb-3">Hoje</h6>
+                            <div class="list-group">
+                                <!-- Exemplo de tarefa -->
+                                <div class="list-group-item list-group-item-action d-flex align-items-center">
+                                    <input type="checkbox" class="form-check-input me-2">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">Exemplo de tarefa</h6>
+                                        <small class="text-muted">Prazo: Hoje às 18:00</small>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-link" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="bi bi-pencil"></i> Editar</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="bi bi-trash"></i> Excluir</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Tarefa -->
+<div class="modal fade" id="newTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Tarefa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newTaskForm">
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="taskTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="taskDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDueDate" class="form-label">Prazo</label>
+                        <input type="datetime-local" class="form-control" id="taskDueDate">
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskPriority" class="form-label">Prioridade</label>
+                        <select class="form-select" id="taskPriority">
+                            <option value="low">Baixa</option>
+                            <option value="medium">Média</option>
+                            <option value="high">Alta</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="newTaskForm" class="btn btn-primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const TasksApp = {
+        init() {
+            this.bindEvents();
+        },
+
+        bindEvents() {
+            const form = document.getElementById('newTaskForm');
+            form.addEventListener('submit', this.handleNewTask.bind(this));
+
+            // Manipuladores para checkboxes de tarefas
+            document.querySelectorAll('.form-check-input').forEach(checkbox => {
+                checkbox.addEventListener('change', this.handleTaskComplete.bind(this));
+            });
+        },
+
+        handleNewTask(e) {
+            e.preventDefault();
+            // Implementar lógica de criação de tarefa
+            const formData = new FormData(e.target);
+            console.log('Nova tarefa:', Object.fromEntries(formData));
+            
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newTaskModal'));
+            modal.hide();
+            
+            // Mostrar mensagem de sucesso
+            showToast('Tarefa criada com sucesso!', 'success');
+        },
+
+        handleTaskComplete(e) {
+            const taskElement = e.target.closest('.list-group-item');
+            if (e.target.checked) {
+                taskElement.classList.add('text-muted');
+                showToast('Tarefa concluída!', 'success');
+            } else {
+                taskElement.classList.remove('text-muted');
+            }
+        }
+    };
+
+    TasksApp.init();
+});
+</script>
+{% endblock %} 

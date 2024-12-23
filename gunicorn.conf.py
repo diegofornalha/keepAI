@@ -1,10 +1,19 @@
 import multiprocessing
 
-bind = "0.0.0.0:3000"
-workers = multiprocessing.cpu_count() * 2 + 1
-worker_class = "sync"  # Mudando para worker sync do Flask
+bind = "0.0.0.0:5000"
+workers = 3
+worker_class = "sync"
+reload = True
+reload_engine = "auto"
+reload_extra_files = ["templates/", "static/"]
 timeout = 120
 keepalive = 5
-errorlog = "-"
 accesslog = "-"
-capture_output = True 
+errorlog = "-"
+loglevel = "info"
+capture_output = True
+daemon = False
+pidfile = None
+umask = 0
+user = None
+group = None

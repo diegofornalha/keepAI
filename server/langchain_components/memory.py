@@ -1,23 +1,46 @@
-from langchain.memory import ConversationBufferMemory
-from langchain.memory.chat_message_histories import SQLChatMessageHistory
-from typing import Optional
 import os
+from typing import List, Dict, Any
+from langchain.memory import ConversationBufferMemory
+from server.config.settings import settings
 
-class CustomBufferMemory(ConversationBufferMemory):
-    def __init__(self, session_id: str):
-        connection_string = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-        
-        message_history = SQLChatMessageHistory(
-            session_id=session_id,
-            connection_string=connection_string
-        )
-        
-        super().__init__(
-            memory_key="chat_history",
-            return_messages=True,
-            chat_memory=message_history
-        )
-        
-    async def clear(self):
-        """Limpa o histórico de mensagens"""
-        await self.chat_memory.clear() 
+
+class SupabaseMemory(ConversationBufferMemory):
+    def __init__(self):
+        super().__init__()
+        self.supabase = settings.get_supabase_client()
+        self.table_name = "conversations"
+
+    def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
+        """Salva o contexto da conversa no Supabase."""
+        try:
+            self.supabase.table(self.table_name).insert(
+                {"inputs": inputs, "outputs": outputs, "session_id": self.session_id}
+            ).execute()
+        except Exception as e:
+            print(f"Erro ao salvar contexto: {e}")
+
+    def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """Carrega variáveis da memória do Supabase."""
+        try:
+            result = (
+                self.supabase.table(self.table_name)
+                .select("inputs, outputs")
+                .eq("session_id", self.session_id)
+                .order("created_at", desc=True)
+                .limit(10)
+                .execute()
+            )
+
+            history = []
+            for item in result.data:
+                history.extend(
+                    [
+                        {"role": "user", "content": str(item["inputs"])},
+                        {"role": "assistant", "content": str(item["outputs"])},
+                    ]
+                )
+
+            return {"history": history}
+        except Exception as e:
+            print(f"Erro ao carregar memória: {e}")
+            return {"history": []}

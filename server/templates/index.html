@@ -1,62 +1,100 @@
 {% extends "base.html" %}
 
-{% block title %}Chat & Notas{% endblock %}
+{% block title %}Início{% endblock %}
+
+{% block page_title %}Chat & Notas{% endblock %}
 
 {% block content %}
-<div class="row h-100">
-    <!-- Chat Section -->
-    <div class="col-md-6 chat-section">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="mb-0">Chat</h5>
-            </div>
-            <div class="card-body chat-messages" id="chat-messages">
-                <!-- Mensagens do chat serão inseridas aqui -->
-            </div>
-            <div class="card-footer">
-                <form id="chat-form" class="d-flex">
-                    <input type="text" id="message-input" class="form-control me-2" placeholder="Digite sua mensagem...">
-                    <button type="submit" class="btn btn-primary">Enviar</button>
-                </form>
+<div class="container">
+    <div class="row">
+        <!-- Chat -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Chat</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div id="chat-messages" class="flex-grow-1 mb-3" style="height: 400px; overflow-y: auto;">
+                        <!-- Mensagens serão carregadas aqui -->
+                        <div class="message mb-3">
+                            <div class="message-content bg-light p-3 rounded">
+                                <div class="message-header d-flex justify-content-between mb-2">
+                                    <strong>KeepAI</strong>
+                                    <small class="text-muted">Agora</small>
+                                </div>
+                                <p class="mb-0">Olá! Como posso ajudar você hoje?</p>
+                            </div>
+                        </div>
+                    </div>
+                    <form id="chat-form" class="mt-auto">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Digite sua mensagem..." id="message-input">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Notes Section -->
-    <div class="col-md-6 notes-section">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Notas Automáticas</h5>
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newNoteModal">
-                    <i class="bi bi-plus-lg"></i> Nova Nota
-                </button>
-            </div>
-            <div class="card-body notes-list" id="notes-list">
-                <!-- Notas serão inseridas aqui -->
+        <!-- Notas Rápidas -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Notas Rápidas</h5>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newQuickNoteModal">
+                        <i class="bi bi-plus-lg"></i> Nova Nota
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="quick-notes" class="quick-notes-container">
+                        <!-- Notas rápidas serão carregadas aqui -->
+                        <div class="quick-note mb-3 p-3 border rounded">
+                            <div class="d-flex justify-content-between mb-2">
+                                <h6 class="mb-0">Exemplo de nota rápida</h6>
+                                <div class="dropdown">
+                                    <button class="btn btn-link p-0" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil"></i> Editar</a></li>
+                                        <li><a class="dropdown-item" href="#"><i class="bi bi-trash"></i> Excluir</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="mb-0 text-muted">Conteúdo da nota de exemplo...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Nova Nota -->
-<div class="modal fade" id="newNoteModal" tabindex="-1">
+<!-- Modal Nova Nota Rápida -->
+<div class="modal fade" id="newQuickNoteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nova Nota</h5>
+                <h5 class="modal-title">Nova Nota Rápida</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="note-form">
+                <form id="newQuickNoteForm">
                     <div class="mb-3">
-                        <textarea class="form-control" id="note-content" rows="4" 
-                                placeholder="Digite sua nota... O sistema identificará automaticamente ações necessárias."></textarea>
+                        <label for="noteTitle" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="noteTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="noteContent" class="form-label">Conteúdo</label>
+                        <textarea class="form-control" id="noteContent" rows="3" required></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="save-note">Salvar</button>
+                <button type="submit" form="newQuickNoteForm" class="btn btn-primary">Salvar</button>
             </div>
         </div>
     </div>
@@ -66,117 +104,71 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const noteForm = document.getElementById('note-form');
-    const saveNoteBtn = document.getElementById('save-note');
-    const notesList = document.getElementById('notes-list');
-    const chatForm = document.getElementById('chat-form');
-    const messageInput = document.getElementById('message-input');
-    const chatMessages = document.getElementById('chat-messages');
+    const HomeApp = {
+        init() {
+            this.bindEvents();
+        },
 
-    // Função para criar nota
-    saveNoteBtn.addEventListener('click', async function() {
-        const content = document.getElementById('note-content').value;
-        if (!content) return;
+        bindEvents() {
+            // Form do chat
+            const chatForm = document.getElementById('chat-form');
+            chatForm.addEventListener('submit', this.handleChatSubmit.bind(this));
 
-        try {
-            const response = await fetch('/api/notes/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ content })
-            });
+            // Form de nota rápida
+            const quickNoteForm = document.getElementById('newQuickNoteForm');
+            quickNoteForm.addEventListener('submit', this.handleQuickNoteSubmit.bind(this));
+        },
 
-            const result = await response.json();
-            if (result.error) {
-                alert('Erro ao criar nota: ' + result.error);
-                return;
+        handleChatSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                // Adicionar mensagem do usuário
+                this.addMessage(message, 'Você');
+                input.value = '';
+                
+                // Simular resposta do KeepAI
+                setTimeout(() => {
+                    this.addMessage('Resposta simulada do KeepAI...', 'KeepAI');
+                }, 1000);
             }
+        },
 
-            // Adiciona nota à lista
-            addNoteToList(result);
+        handleQuickNoteSubmit(e) {
+            e.preventDefault();
+            // Implementar lógica de criação de nota rápida
+            const formData = new FormData(e.target);
+            console.log('Nova nota rápida:', Object.fromEntries(formData));
             
-            // Fecha o modal
-            bootstrap.Modal.getInstance(document.getElementById('newNoteModal')).hide();
-            document.getElementById('note-content').value = '';
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newQuickNoteModal'));
+            modal.hide();
             
-        } catch (error) {
-            console.error('Erro:', error);
-            alert('Erro ao criar nota');
-        }
-    });
+            // Mostrar mensagem de sucesso
+            showToast('Nota criada com sucesso!', 'success');
+        },
 
-    // Função para adicionar nota à lista
-    function addNoteToList(note) {
-        const noteElement = document.createElement('div');
-        noteElement.className = 'note-item card mb-3';
-        noteElement.innerHTML = `
-            <div class="card-body">
-                <p class="note-content">${note.content}</p>
-                <div class="note-actions">
-                    ${note.executed_actions.map(action => `
-                        <span class="badge bg-${getActionBadgeColor(action.type)}">
-                            ${action.type}: ${action.result}
-                        </span>
-                    `).join('')}
+        addMessage(content, sender) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message mb-3';
+            messageDiv.innerHTML = `
+                <div class="message-content bg-light p-3 rounded">
+                    <div class="message-header d-flex justify-content-between mb-2">
+                        <strong>${sender}</strong>
+                        <small class="text-muted">Agora</small>
+                    </div>
+                    <p class="mb-0">${content}</p>
                 </div>
-            </div>
-        `;
-        notesList.prepend(noteElement);
-    }
-
-    // Função para definir cor do badge da ação
-    function getActionBadgeColor(actionType) {
-        const colors = {
-            'reminder': 'info',
-            'task': 'primary',
-            'notification': 'warning'
-        };
-        return colors[actionType] || 'secondary';
-    }
-
-    // Função para enviar mensagem no chat
-    chatForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const message = messageInput.value;
-        if (!message) return;
-
-        // Adiciona mensagem do usuário
-        addMessageToChat('user', message);
-        messageInput.value = '';
-
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message })
-            });
-
-            const result = await response.json();
-            
-            // Adiciona resposta do assistente
-            addMessageToChat('assistant', result.response);
-            
-        } catch (error) {
-            console.error('Erro:', error);
-            alert('Erro ao enviar mensagem');
+            `;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-    });
+    };
 
-    // Função para adicionar mensagem ao chat
-    function addMessageToChat(role, content) {
-        const messageElement = document.createElement('div');
-        messageElement.className = `chat-message ${role}-message`;
-        messageElement.innerHTML = `
-            <div class="message-content">
-                ${content}
-            </div>
-        `;
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+    HomeApp.init();
 });
 </script>
 {% endblock %} 
