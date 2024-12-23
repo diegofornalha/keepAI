@@ -16,7 +16,16 @@ class ChatManager:
             temperature=0.7,
             model="gemini-pro",
             google_api_key=google_api_key,
-            convert_system_message_to_human=True
+            convert_system_message_to_human=True,
+            max_output_tokens=2048,
+            top_p=0.95,
+            top_k=40,
+            safety_settings={
+                "HARASSMENT": "block_none",
+                "HATE_SPEECH": "block_none",
+                "SEXUALLY_EXPLICIT": "block_none",
+                "DANGEROUS_CONTENT": "block_none"
+            }
         )
         
         self.memory = ConversationBufferMemory(
@@ -38,6 +47,7 @@ Algumas regras importantes:
 4. Evite respostas muito longas ou técnicas demais
 5. Se não souber algo, diga honestamente
 6. Mantenha o contexto da conversa
+7. Sempre sugira criar notas quando identificar tarefas ou compromissos
 
 Histórico da conversa:
 {history}
@@ -59,20 +69,22 @@ Assistente: """
             # Garante que estamos usando o loop de eventos correto
             loop = asyncio.get_event_loop()
             
-            # Executa a chamada ao modelo no loop atual
-            response = await loop.run_in_executor(
-                None, 
-                lambda: self.conversation.predict(input=message)
-            )
+            # Adiciona tratamento de erros mais robusto
+            try:
+                response = await loop.run_in_executor(
+                    None, 
+                    lambda: self.conversation.predict(input=message)
+                )
+            except Exception as e:
+                logging.error(f"Erro na chamada ao Gemini: {str(e)}")
+                return "Desculpe, tive um problema ao processar sua mensagem. Pode tentar novamente?"
             
-            # Se a resposta estiver vazia ou for None
+            # Validações adicionais da resposta
             if not response or response.isspace():
                 return "Opa! Não consegui processar sua mensagem. Pode tentar dizer de outra forma?"
                 
-            # Remove o prefixo "Assistente:" se existir
+            # Limpeza e formatação da resposta
             response = response.replace("Assistente:", "").strip()
-            
-            # Remove o prefixo "Deixe-me ajudar você com isso." se existir
             response = response.replace("Deixe-me ajudar você com isso.", "").strip()
             
             return response

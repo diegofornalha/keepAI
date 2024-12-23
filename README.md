@@ -7,11 +7,9 @@ KeepAI é um assistente pessoal inteligente.
 
 ## Principais Funcionalidades
 
-- 💬 Chat interativo com IA
-- 📝 Criação e edição de notas
-- 📅 Histórico de conversas
-- 🔄 Sincronização em tempo real
-- 🐳 Suporte a Docker para fácil instalação
+- 💬 Garantir que o Chat esteja integrado com gemini
+- 📝 Criação e edição de notas e sincronização com supabase
+- 📅 Histórico de conversas sicronizado com supabase
 
 ## Em Desenvolvimento
 

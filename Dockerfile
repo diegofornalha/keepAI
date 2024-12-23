@@ -1,42 +1,43 @@
+# Build stage for React frontend
+FROM node:18-alpine as frontend-build
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm install
+COPY client/ ./
+RUN npm run build
+
+# Python backend stage
 FROM python:3.11-slim
 
-# Instala dependências do sistema
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    postgresql-client \
-    redis-tools \
-    gcc \
-    python3-dev \
+    build-essential \
+    curl \
+    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
+# Set work directory
 WORKDIR /app
 
-# Configuração do pip
-COPY pip.conf /etc/pip.conf
-
-# Copia arquivos do projeto
-COPY requirements.txt ./
-COPY scripts/ ./scripts/
-COPY server/ ./server/
-COPY gunicorn.conf.py ./
-
-# Instala dependências Python
+# Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Cria diretórios necessários
-RUN mkdir -p logs backups data/cache data/uploads
+# Copy backend code
+COPY server/ ./server/
+COPY app.py .
+COPY gunicorn.conf.py .
 
-# Define variáveis de ambiente
+# Copy frontend build from previous stage
+COPY --from=frontend-build /app/client/build ./client/build
+
+# Set environment variables
 ENV PYTHONPATH=/app
-ENV PYTHONUNBUFFERED=1
-ENV TZ=America/Sao_Paulo
-ENV LANGCHAIN_TRACING_V2=true
-ENV LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
 
-# Expõe portas
-EXPOSE 3000 9090
+# Expose port
+EXPOSE 5000
 
-# Script de entrada
-COPY scripts/entrypoint.sh ./
-RUN chmod +x entrypoint.sh
-
-ENTRYPOINT ["./entrypoint.sh"] 
+# Start Gunicorn
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "app:app"] 
