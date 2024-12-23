@@ -1,0 +1,38 @@
+#!/bin/bash
+
+echo "Executando verificações de pré-commit..."
+
+# Roda black
+echo "Verificando formatação com black..."
+black . --check
+if [ $? -ne 0 ]; then
+    echo "Erro na formatação do código. Execute 'black .' para corrigir."
+    exit 1
+fi
+
+# Roda flake8
+echo "Verificando estilo com flake8..."
+flake8 .
+if [ $? -ne 0 ]; then
+    echo "Erro nas verificações do flake8."
+    exit 1
+fi
+
+# Roda mypy
+echo "Verificando tipos com mypy..."
+mypy .
+if [ $? -ne 0 ]; then
+    echo "Erro nas verificações de tipo."
+    exit 1
+fi
+
+# Roda testes
+echo "Executando testes..."
+pytest
+if [ $? -ne 0 ]; then
+    echo "Testes falharam."
+    exit 1
+fi
+
+echo "Todas as verificações passaram!"
+exit 0 

@@ -1,61 +1,73 @@
-version: "3"
-
 services:
   app:
     build: .
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app
-    environment:
-      - FLASK_APP=app.py
-      - FLASK_ENV=development
-      - PORT=3000
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-    depends_on:
-      - prometheus
-      - grafana
-      - loki
-
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
       - "9090:9090"
+    env_file: .env
+    volumes:
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+      - ./server:/app/server
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD:-keepaipass}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT}
+      - LANGCHAIN_TRACING_V2=true
+      - LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+    depends_on:
+      - postgres
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: keepai
+      POSTGRES_USER: keepai
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-keepaipass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+      
+  redis:
+    image: redis:7
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+      
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9091:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-
+      
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana
     ports:
       - "3001:3000"
-    volumes:
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
     depends_on:
       - prometheus
-      - loki
-
-  loki:
-    image: grafana/loki:latest
+      
+  jaeger:
+    image: jaegertracing/all-in-one
     ports:
-      - "3100:3100"
-    volumes:
-      - ./loki:/loki
-    command: -config.file=/etc/loki/local-config.yaml
+      - "16686:16686"
+      - "6831:6831/udp"
 
 volumes:
-  grafana-storage: {}
-  prometheus_data: {}
-  alertmanager_data: {}
-  loki_data: {}
+  postgres_data:
+  redis_data:

@@ -1,452 +1,182 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>KeepAI - Seu Assistente Pessoal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-    <style>
-        /* Loading Spinner */
-        .loading {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
-    <!-- Loading Spinner -->
-    <div id="loading" class="loading">
-        <div class="loading-spinner"></div>
-    </div>
+{% extends "base.html" %}
 
-    <div class="container">
-        <!-- Seção de Chat -->
-        <div class="chat-section">
-            <div class="chat-container" id="chat-container">
-                <!-- Mensagens serão adicionadas aqui -->
-            </div>
-            <div class="input-container">
-                <input type="text" id="user-input" placeholder="Digite sua mensagem..." autofocus>
-                <button onclick="sendMessage()">Enviar</button>
-            </div>
-        </div>
+{% block title %}Chat & Notas{% endblock %}
 
-        <!-- Seção de Notas -->
-        <div class="notes-section">
-            <div class="notes-header">
-                <h2>📝 Suas Notas</h2>
-                <button onclick="showCreateNoteModal()" class="new-note-btn">+ Nova Nota</button>
+{% block content %}
+<div class="row h-100">
+    <!-- Chat Section -->
+    <div class="col-md-6 chat-section">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Chat</h5>
             </div>
-            <div class="notes-container" id="notes-container">
-                <!-- Notas serão adicionadas aqui -->
+            <div class="card-body chat-messages" id="chat-messages">
+                <!-- Mensagens do chat serão inseridas aqui -->
+            </div>
+            <div class="card-footer">
+                <form id="chat-form" class="d-flex">
+                    <input type="text" id="message-input" class="form-control me-2" placeholder="Digite sua mensagem...">
+                    <button type="submit" class="btn btn-primary">Enviar</button>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Criação de Nota -->
-    <div id="createNoteModal" class="modal">
+    <!-- Notes Section -->
+    <div class="col-md-6 notes-section">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Notas Automáticas</h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newNoteModal">
+                    <i class="bi bi-plus-lg"></i> Nova Nota
+                </button>
+            </div>
+            <div class="card-body notes-list" id="notes-list">
+                <!-- Notas serão inseridas aqui -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Nota -->
+<div class="modal fade" id="newNoteModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
-            <h2>Nova Nota</h2>
-            <input type="text" id="noteTitle" placeholder="Título">
-            <textarea id="noteContent" placeholder="Conteúdo"></textarea>
-            <div class="modal-buttons">
-                <button onclick="hideCreateNoteModal()">Cancelar</button>
-                <button onclick="createNote()">Criar</button>
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Nota</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="note-form">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="note-content" rows="4" 
+                                placeholder="Digite sua nota... O sistema identificará automaticamente ações necessárias."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="save-note">Salvar</button>
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <!-- Modal de Edição de Nota -->
-    <div id="editNoteModal" class="modal">
-        <div class="modal-content">
-            <h2>Editar Nota</h2>
-            <input type="text" id="editNoteTitle" placeholder="Título">
-            <textarea id="editNoteContent" placeholder="Conteúdo"></textarea>
-            <div class="modal-buttons">
-                <button onclick="hideEditNoteModal()">Cancelar</button>
-                <button onclick="updateNote()">Salvar</button>
-            </div>
-        </div>
-    </div>
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const noteForm = document.getElementById('note-form');
+    const saveNoteBtn = document.getElementById('save-note');
+    const notesList = document.getElementById('notes-list');
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const chatMessages = document.getElementById('chat-messages');
 
-    <!-- Modal de Confirmação de Deleção -->
-    <div id="deleteNoteModal" class="modal">
-        <div class="modal-content">
-            <h2>Confirmar Deleção</h2>
-            <p>Tem certeza que deseja deletar esta nota?</p>
-            <div class="modal-buttons">
-                <button onclick="hideDeleteNoteModal()">Cancelar</button>
-                <button onclick="confirmDeleteNote()" class="delete-btn">Deletar</button>
-            </div>
-        </div>
-    </div>
+    // Função para criar nota
+    saveNoteBtn.addEventListener('click', async function() {
+        const content = document.getElementById('note-content').value;
+        if (!content) return;
 
-    <script>
-        let currentNoteId = null;
-        let editingNoteId = null;
-
-        // Configuração do token CSRF
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        // Função para formatar a data no padrão brasileiro
-        function formatarDataBrasil(data) {
-            const date = new Date(data);
-            return date.toLocaleString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+        try {
+            const response = await fetch('/api/notes/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content })
             });
-        }
 
-        // Função para mostrar/esconder loading
-        function showLoading() {
-            const loading = document.getElementById('loading');
-            loading.style.display = 'flex';
-            loading.style.opacity = '1';
-        }
-        
-        function hideLoading() {
-            const loading = document.getElementById('loading');
-            loading.style.opacity = '0';
-            setTimeout(() => {
-                loading.style.display = 'none';
-            }, 300);
-        }
-
-        // Função para enviar mensagem com token CSRF
-        async function sendMessage() {
-            const input = document.getElementById('user-input');
-            const message = input.value.trim();
-            if (!message) return;
-
-            input.value = '';
-            appendMessage('user', message);
-            
-            showLoading();
-            try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: JSON.stringify({ message })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erro na requisição');
-                }
-
-                const data = await response.json();
-                appendMessage('assistant', data.response);
-            } catch (error) {
-                console.error('Erro:', error);
-                appendMessage('error', 'Desculpe, ocorreu um erro ao processar sua mensagem.');
-            } finally {
-                hideLoading();
+            const result = await response.json();
+            if (result.error) {
+                alert('Erro ao criar nota: ' + result.error);
+                return;
             }
-        }
 
-        // Função para adicionar mensagem ao chat
-        function appendMessage(type, content) {
-            const chatContainer = document.getElementById('chat-container');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}-message`;
-            messageDiv.textContent = content;
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        // Função para carregar notas com token CSRF
-        async function loadNotes() {
-            try {
-                const response = await fetch('/api/notes', {
-                    headers: {
-                        'X-CSRF-Token': csrfToken
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erro ao carregar notas');
-                }
-
-                const data = await response.json();
-                displayNotes(data.response);
-            } catch (error) {
-                console.error('Erro ao carregar notas:', error);
-            }
-        }
-
-        // Função para exibir as notas
-        function displayNotes(notes) {
-            const notesContainer = document.getElementById('notes-container');
-            notesContainer.innerHTML = ''; // Limpa o container
-
-            notes.forEach(note => {
-                const noteDiv = document.createElement('div');
-                noteDiv.className = 'note';
-                noteDiv.innerHTML = `
-                    <div class="note-header">
-                        <h3>${note.titulo}</h3>
-                        <div class="note-actions">
-                            <button onclick="showEditNoteModal(${note.id}, '${note.titulo}', '${note.conteudo}')" class="edit-btn">✏️</button>
-                            <button onclick="showDeleteNoteModal(${note.id})" class="delete-btn">🗑️</button>
-                        </div>
-                    </div>
-                    <div class="note-content">${note.conteudo}</div>
-                    <div class="note-footer">
-                        <span class="note-date">${formatarDataBrasil(note.data)}</span>
-                    </div>
-                `;
-                notesContainer.appendChild(noteDiv);
-            });
-        }
-
-        // Função para processar texto das notas
-        function processNotesText(notesText) {
-            const lines = notesText.split('\n');
-            let currentNote = null;
+            // Adiciona nota à lista
+            addNoteToList(result);
             
-            for (const line of lines) {
-                if (line.startsWith('#')) {
-                    if (currentNote) {
-                        addNoteToContainer(currentNote);
-                    }
-                    const match = line.match(/#(\d+) - (.*?) \((.*?)\)/);
-                    if (match) {
-                        currentNote = {
-                            id: match[1],
-                            titulo: match[2],
-                            data: match[3],
-                            conteudo: ''
-                        };
-                    }
-                } else if (currentNote && line.trim()) {
-                    currentNote.conteudo += line + '\n';
-                }
-            }
+            // Fecha o modal
+            bootstrap.Modal.getInstance(document.getElementById('newNoteModal')).hide();
+            document.getElementById('note-content').value = '';
             
-            if (currentNote) {
-                addNoteToContainer(currentNote);
-            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao criar nota');
         }
+    });
 
-        // Função para adicionar nota ao container
-        function addNoteToContainer(note) {
-            const notesContainer = document.getElementById('notes-container');
-            const noteDiv = document.createElement('div');
-            noteDiv.className = 'note';
-            
-            // Limpa o conteúdo removendo IDs e título duplicado
-            let cleanContent = note.conteudo;
-            // Remove números no início do conteúdo (IDs)
-            cleanContent = cleanContent.replace(/^\d+[\s\n]*/, '');
-            // Remove o título se ele estiver no início do conteúdo
-            cleanContent = cleanContent.replace(new RegExp('^' + escapeRegExp(note.titulo) + '[\s\n]*'), '');
-            // Remove linhas em branco extras
-            cleanContent = cleanContent.trim();
-            
-            noteDiv.innerHTML = `
-                <div class="note-header">
-                    <h3>${escapeHtml(note.titulo)}</h3>
-                    <div class="note-actions">
-                        <button onclick="showEditNoteModal('${note.id}', '${escapeHtml(note.titulo)}', \`${escapeHtml(cleanContent)}\`)">✏️</button>
-                        <button onclick="showDeleteNoteModal(${note.id})">🗑️</button>
-                    </div>
+    // Função para adicionar nota à lista
+    function addNoteToList(note) {
+        const noteElement = document.createElement('div');
+        noteElement.className = 'note-item card mb-3';
+        noteElement.innerHTML = `
+            <div class="card-body">
+                <p class="note-content">${note.content}</p>
+                <div class="note-actions">
+                    ${note.executed_actions.map(action => `
+                        <span class="badge bg-${getActionBadgeColor(action.type)}">
+                            ${action.type}: ${action.result}
+                        </span>
+                    `).join('')}
                 </div>
-                <div class="note-date">${formatarDataBrasil(note.data)}</div>
-                <div class="note-content">${escapeHtml(cleanContent)}</div>
-            `;
-            notesContainer.appendChild(noteDiv);
+            </div>
+        `;
+        notesList.prepend(noteElement);
+    }
+
+    // Função para definir cor do badge da ação
+    function getActionBadgeColor(actionType) {
+        const colors = {
+            'reminder': 'info',
+            'task': 'primary',
+            'notification': 'warning'
+        };
+        return colors[actionType] || 'secondary';
+    }
+
+    // Função para enviar mensagem no chat
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const message = messageInput.value;
+        if (!message) return;
+
+        // Adiciona mensagem do usuário
+        addMessageToChat('user', message);
+        messageInput.value = '';
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message })
+            });
+
+            const result = await response.json();
+            
+            // Adiciona resposta do assistente
+            addMessageToChat('assistant', result.response);
+            
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao enviar mensagem');
         }
+    });
 
-        // Função para escapar HTML (prevenção XSS)
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Função para escapar expressões regulares
-        function escapeRegExp(string) {
-            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        }
-
-        // Funções para manipulação de notas
-        function showEditNoteModal(id, title, content) {
-            editingNoteId = id;
-            document.getElementById('editNoteTitle').value = title;
-            document.getElementById('editNoteContent').value = content;
-            document.getElementById('editNoteModal').style.display = 'flex';
-        }
-
-        function hideEditNoteModal() {
-            document.getElementById('editNoteModal').style.display = 'none';
-            editingNoteId = null;
-        }
-
-        function showDeleteNoteModal(id) {
-            currentNoteId = id;
-            document.getElementById('deleteNoteModal').style.display = 'flex';
-        }
-
-        function hideDeleteNoteModal() {
-            document.getElementById('deleteNoteModal').style.display = 'none';
-            currentNoteId = null;
-        }
-
-        function showCreateNoteModal() {
-            document.getElementById('createNoteModal').style.display = 'flex';
-        }
-
-        function hideCreateNoteModal() {
-            document.getElementById('createNoteModal').style.display = 'none';
-            document.getElementById('noteTitle').value = '';
-            document.getElementById('noteContent').value = '';
-        }
-
-        // Função para criar nota
-        async function createNote() {
-            const title = document.getElementById('noteTitle').value.trim();
-            const content = document.getElementById('noteContent').value.trim();
-
-            if (!title || !content) {
-                alert('Por favor, preencha todos os campos.');
-                return;
-            }
-
-            showLoading();
-            try {
-                const response = await fetch('/api/notes', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: JSON.stringify({
-                        titulo: title,
-                        conteudo: content
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erro ao criar nota');
-                }
-
-                hideCreateNoteModal();
-                document.getElementById('noteTitle').value = '';
-                document.getElementById('noteContent').value = '';
-                loadNotes();
-            } catch (error) {
-                console.error('Erro ao criar nota:', error);
-                alert('Erro ao criar nota. Por favor, tente novamente.');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // Função para atualizar nota
-        async function updateNote() {
-            const title = document.getElementById('editNoteTitle').value.trim();
-            const content = document.getElementById('editNoteContent').value.trim();
-
-            if (!title || !content) {
-                alert('Por favor, preencha todos os campos.');
-                return;
-            }
-
-            showLoading();
-            try {
-                const response = await fetch(`/api/notes/${editingNoteId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: JSON.stringify({
-                        titulo: title,
-                        conteudo: content
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erro ao atualizar nota');
-                }
-
-                hideEditNoteModal();
-                loadNotes();
-            } catch (error) {
-                console.error('Erro ao atualizar nota:', error);
-                alert('Erro ao atualizar nota. Por favor, tente novamente.');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        async function confirmDeleteNote() {
-            if (!currentNoteId) return;
-
-            showLoading();
-            try {
-                const response = await fetch(`/api/notes/${currentNoteId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-Token': csrfToken
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erro ao deletar nota');
-                }
-
-                hideDeleteNoteModal();
-                loadNotes();
-            } catch (error) {
-                console.error('Erro ao deletar nota:', error);
-                alert('Erro ao deletar nota. Por favor, tente novamente.');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // Event listener para o Enter no input
-        document.getElementById('user-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        // Carrega as notas ao iniciar a página
-        document.addEventListener('DOMContentLoaded', loadNotes);
-    </script>
-</body>
-</html> 
+    // Função para adicionar mensagem ao chat
+    function addMessageToChat(role, content) {
+        const messageElement = document.createElement('div');
+        messageElement.className = `chat-message ${role}-message`;
+        messageElement.innerHTML = `
+            <div class="message-content">
+                ${content}
+            </div>
+        `;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+});
+</script>
+{% endblock %} 
