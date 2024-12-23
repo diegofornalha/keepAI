@@ -1,18 +1,133 @@
+version: '3.8'
+
 services:
-  app:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "5001:5000"
+  server:
+    build:
+      context: ./keepai/apps/server
+      target: development
     volumes:
-      - ./server/templates:/app/templates
-      - ./server/static:/app/static
-      - ./server/config:/app/server/config
-      - ./app.py:/app/app.py
+      - ./keepai/apps/server:/app
+    ports:
+      - "5001:5001"
     environment:
+      - FLASK_APP=app.py
       - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PYTHONPATH=/app
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
-    stdin_open: true
-    tty: true
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    working_dir: /app
+    command: python -m flask run --host=0.0.0.0 --port=5001
+    networks:
+      - keepai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  format:
+    build:
+      context: ./keepai/apps/server
+      target: development
+    volumes:
+      - ./keepai/apps/server:/app
+    command: ["sh", "/app/scripts/format.sh"]
+    profiles:
+      - tools
+
+  lint:
+    build:
+      context: ./keepai/apps/server
+      target: development
+    volumes:
+      - ./keepai/apps/server:/app
+    command: flake8
+    profiles:
+      - tools
+
+  typecheck:
+    build:
+      context: ./keepai/apps/server
+      target: development
+    volumes:
+      - ./keepai/apps/server:/app
+    command: mypy .
+    profiles:
+      - tools
+
+  test:
+    build:
+      context: ./keepai/apps/server
+      target: development
+    volumes:
+      - ./keepai/apps/server:/app
+    command: pytest
+    profiles:
+      - tools
+
+  ai:
+    build:
+      context: ./keepai/services/ai
+    ports:
+      - "5002:5002"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - PYTHONPATH=/app
+    working_dir: /app
+    command: python -m flask run --host=0.0.0.0 --port=5002
+    networks:
+      - keepai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  realtime:
+    build:
+      context: ./keepai/services/realtime
+    ports:
+      - "5003:5003"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PYTHONPATH=/app
+    working_dir: /app
+    command: python -m flask run --host=0.0.0.0 --port=5003
+    networks:
+      - keepai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - server
+      - ai
+      - realtime
+    networks:
+      - keepai-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  keepai-network:
+    driver: bridge

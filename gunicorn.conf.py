@@ -1,19 +1,25 @@
 import multiprocessing
+from server.config.settings import Settings
 
-bind = "0.0.0.0:5000"
-workers = 3
+settings = Settings()
+
+# Configurações do servidor
+bind = f"{settings.HOST}:{settings.PORT}"
+workers = multiprocessing.cpu_count() * 2 + 1
 worker_class = "sync"
-reload = True
-reload_engine = "auto"
-reload_extra_files = ["templates/", "static/"]
+threads = 2
 timeout = 120
-keepalive = 5
+
+# Configurações de logging
 accesslog = "-"
 errorlog = "-"
 loglevel = "info"
-capture_output = True
-daemon = False
-pidfile = None
-umask = 0
-user = None
-group = None
+
+# Configurações de desenvolvimento
+reload = settings.DEBUG
+reload_extra_files = ["server/templates/", "server/static/"]
+
+# Configurações de segurança
+limit_request_line = 4094
+limit_request_fields = 100
+limit_request_field_size = 8190

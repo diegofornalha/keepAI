@@ -1,177 +1,105 @@
 # KeepAI
 
-KeepAI é um assistente pessoal inteligente que integra chat, notas, calendário e tarefas.
+Uma aplicação moderna para gerenciamento de notas, tarefas e calendário com integração de IA.
 
 ## Estrutura do Projeto
 
-O projeto está organizado em clusters modulares para facilitar a manutenção e escalabilidade:
+- [Estrutura de Infra](estrutura_modular/infra.md)
+- [Estrutura de Server](estrutura_modular/server.md)
+- [Estrutura de Database](estrutura_modular/database.md)
+- [Estrutura de Clusters](estrutura_modular/clusters.md)
 
-```
-keepai/
-├── client/                      # Frontend React
-│   ├── src/
-│   │   ├── @types/             # Definições de tipos
-│   │   ├── components/         # Componentes reutilizáveis
-│   │   ├── features/          # Features modulares
-│   │   ├── services/          # Serviços de API
-│   │   ├── hooks/             # Custom hooks
-│   │   ├── store/             # Estado global
-│   │   └── config/            # Configurações
-│   └── public/                 # Arquivos estáticos
-│
-└── server/                     # Backend Python
-    ├── api/                    # Endpoints da API
-    ├── core/                   # Núcleo da aplicação
-    ├── services/               # Serviços de negócio
-    └── config/                 # Configurações
+## Tecnologias Utilizadas
 
+- **Aplicação Principal**:
 
-scripts/
-├── start.sh       # Script principal para iniciar a aplicação
-├── dev.sh         # Desenvolvimento com Docker
-├── monitoring/    # Scripts de monitoramento
-│   ├── load_test_extended.py
-│   ├── monitoring.py
-│   └── log_config.py
-└── hooks/         # Git hooks
-    └── pre-commit
+  - Python/Flask
+  - Jinja2 Templates
+  - Bootstrap 5
+  - Pydantic
 
-```
+- **Banco de Dados**:
 
-## Adicionando Novas Funcionalidades
+  - Supabase
 
-Para adicionar uma nova funcionalidade ao KeepAI, siga estes passos:
+- **Serviços**:
 
-### 1. Planejamento
+  - Google Gemini (IA)
+  - Flask-SocketIO (Realtime)
+  - Clerk (Autenticação)
 
-- Defina o escopo da funcionalidade
-- Identifique as dependências necessárias
-- Planeje a estrutura de dados
-- Defina os endpoints da API
+- **Infraestrutura**:
+  - Docker
+  - Docker Compose
+  - Nginx
 
-### 2. Backend (server/)
+## Configuração do Ambiente
 
-1. Crie um novo módulo na pasta `server/api/`
-2. Defina os modelos no `server/models/`
-3. Implemente os serviços em `server/services/`
-4. Configure as rotas em `server/api/`
-5. Atualize as configurações se necessário
-
-Exemplo:
-
-```python
-# server/api/nova_feature/routes.py
-@router.get("/nova-feature")
-async def get_nova_feature():
-    return {"message": "Nova feature"}
-```
-
-### 3. Frontend (client/src/)
-
-1. Crie uma nova pasta em `features/nova_feature/`
-2. Adicione os tipos em `@types/`
-3. Crie o serviço em `services/`
-4. Implemente os hooks em `hooks/`
-5. Desenvolva os componentes
-6. Atualize as rotas
-
-Exemplo de estrutura:
-
-```
-features/nova_feature/
-├── components/
-│   ├── NovaFeature.tsx
-│   └── NovaFeatureList.tsx
-├── hooks/
-│   └── useNovaFeature.ts
-└── services/
-    └── novaFeature.ts
-```
-
-### 4. Integração
-
-1. Adicione a rota no `App.tsx`
-2. Atualize o menu no `Sidebar.tsx`
-3. Configure o estado global se necessário
-4. Atualize as configurações
-
-### 5. Testes
-
-1. Implemente testes unitários
-2. Teste a integração
-3. Verifique a performance
-4. Valide a UX
-
-## Boas Práticas
-
-### Isolamento de Features
-
-- Cada feature deve ser independente
-- Use interfaces bem definidas
-- Evite acoplamento entre features
-- Mantenha a coesão do código
-
-### Gerenciamento de Estado
-
-- Use o Zustand para estado global
-- Mantenha o estado local quando possível
-- Documente as mudanças de estado
-- Implemente validações
-
-### Componentização
-
-- Crie componentes reutilizáveis
-- Use TypeScript para type safety
-- Implemente error boundaries
-- Documente os props
-
-### API
-
-- Use versionamento de API
-- Implemente rate limiting
-- Valide inputs
-- Documente endpoints
-
-## Desenvolvimento
+1. Clone o repositório:
 
 ```bash
-# Instalar dependências
-npm install
-
-# Rodar em desenvolvimento
-docker-compose up --build
-
-# Rodar testes
-npm test
-
-# Build de produção
-docker-compose -f docker-compose.prod.yml up --build
+git clone https://github.com/seu-usuario/keepai.git
+cd keepai
 ```
 
-## Contribuindo
+2. Configure as variáveis de ambiente:
 
-1. Crie uma branch: `feature/nova-funcionalidade`
-2. Faça suas alterações
-3. Teste localmente
+```bash
+cp .env.example .env.local
+```
+
+3. Inicie os containers:
+
+```bash
+docker-compose up --build
+```
+
+4. Acesse a aplicação:
+
+- http://localhost (ou http://localhost:5001 direto)
+
+### Comandos Úteis
+
+```bash
+# Iniciar em modo desenvolvimento
+docker-compose up
+
+# Executar testes
+pytest
+
+# Formatar código
+black server/
+```
+
+## Contribuição
+
+1. Crie uma branch para sua feature: `git checkout -b feature/nome-da-feature`
+2. Commit suas mudanças: `git commit -m 'feat: Adicionando nova feature'`
+3. Push para a branch: `git push origin feature/nome-da-feature`
 4. Abra um Pull Request
 
 ## Licença
 
-MIT
+Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-## Requisitos
+## Portas e Serviços
 
-- Node.js 18+
-- Docker e Docker Compose
-- Conta no Supabase
+O projeto utiliza diferentes portas para cada serviço:
 
-## Configuração
+| Porta | Serviço            | Descrição                                                             |
+| ----- | ------------------ | --------------------------------------------------------------------- |
+| 5001  | Servidor Principal | Gerencia autenticação, notas, tarefas, chat e calendário              |
+| 5002  | Serviço AI         | Processa requisições de inteligência artificial e geração de conteúdo |
+| 5003  | Serviço Realtime   | Gerencia conexões WebSocket e eventos em tempo real                   |
+| 80    | Nginx HTTP         | Proxy reverso para requisições HTTP                                   |
+| 443   | Nginx HTTPS        | Proxy reverso para requisições HTTPS seguras                          |
 
-1. Clone o repositório
-2. Copie o arquivo `.env.example` para `.env`
-3. Configure as variáveis de ambiente do Supabase no arquivo `.env`:
-   ```
-   SUPABASE_URL=sua_url_do_supabase
-   SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
-   ```
-4. Execute `docker-compose up -d` para iniciar os serviços
+### Endpoints Principais
+
+- `/api/auth` - Autenticação e gerenciamento de usuários
+- `/api/notes` - CRUD de notas e organização
+- `/api/tasks` - Gerenciamento de tarefas e lembretes
+- `/api/chat` - Comunicação em tempo real e chat
+- `/api/calendar` - Eventos e calendário
+- `/api/ai` - Processamento de IA e geração de conteúdo
+- `/health` - Verificação de status dos serviços

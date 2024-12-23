@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Calendário{% endblock %}
+
+{% block page_title %}Calendário{% endblock %}
+
+{% block head %}
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core/main.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid/main.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid/main.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@fullcalendar/list/main.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Meu Calendário</h5>
+                    <div class="d-flex gap-2">
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary btn-sm" id="calendarViewDay">Dia</button>
+                            <button class="btn btn-outline-primary btn-sm" id="calendarViewWeek">Semana</button>
+                            <button class="btn btn-outline-primary btn-sm active" id="calendarViewMonth">Mês</button>
+                        </div>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newEventModal">
+                            <i class="bi bi-plus-lg"></i> Novo Evento
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Evento -->
+<div class="modal fade" id="newEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newEventForm">
+                    <div class="mb-3">
+                        <label for="eventTitle" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="eventTitle" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="eventDate" class="form-label">Data</label>
+                            <input type="date" class="form-control" id="eventDate" required>
+                        </div>
+                        <div class="col">
+                            <label for="eventTime" class="form-label">Hora</label>
+                            <input type="time" class="form-control" id="eventTime">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventDescription" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="eventDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventColor" class="form-label">Cor</label>
+                        <select class="form-select" id="eventColor">
+                            <option value="#2563eb">Azul</option>
+                            <option value="#22c55e">Verde</option>
+                            <option value="#ef4444">Vermelho</option>
+                            <option value="#f59e0b">Laranja</option>
+                            <option value="#6366f1">Roxo</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="newEventForm" class="btn btn-primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalhes do Evento -->
+<div class="modal fade" id="eventDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h4 id="eventDetailTitle"></h4>
+                <p class="text-muted mb-3">
+                    <i class="bi bi-calendar-event"></i> <span id="eventDetailDate"></span>
+                </p>
+                <p id="eventDetailDescription" class="mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger" id="deleteEvent">
+                    <i class="bi bi-trash"></i> Excluir
+                </button>
+                <button type="button" class="btn btn-outline-primary" id="editEvent">
+                    <i class="bi bi-pencil"></i> Editar
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/list/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/pt-br.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const CalendarApp = {
+        init() {
+            this.initCalendar();
+            this.bindEvents();
+            this.detailsModal = new bootstrap.Modal(document.getElementById('eventDetailsModal'));
+        },
+
+        initCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            this.calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'pt-br',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                editable: true,
+                selectable: true,
+                selectMirror: true,
+                dayMaxEvents: true,
+                events: [
+                    {
+                        title: 'Reunião de Planejamento',
+                        start: '2024-12-25T10:00:00',
+                        end: '2024-12-25T11:30:00',
+                        color: '#2563eb'
+                    },
+                    {
+                        title: 'Almoço com Cliente',
+                        start: '2024-12-25T12:30:00',
+                        end: '2024-12-25T14:00:00',
+                        color: '#22c55e'
+                    },
+                    {
+                        title: 'Review de Projeto',
+                        start: '2024-12-26T15:00:00',
+                        end: '2024-12-26T16:30:00',
+                        color: '#6366f1'
+                    },
+                    {
+                        title: 'Deadline do Projeto X',
+                        start: '2024-12-27',
+                        color: '#ef4444'
+                    },
+                    {
+                        title: 'Treinamento',
+                        start: '2024-12-28T09:00:00',
+                        end: '2024-12-28T17:00:00',
+                        color: '#f59e0b'
+                    }
+                ],
+                eventClick: this.handleEventClick.bind(this),
+                select: this.handleDateSelect.bind(this)
+            });
+            
+            this.calendar.render();
+        },
+
+        bindEvents() {
+            // Form de novo evento
+            const eventForm = document.getElementById('newEventForm');
+            eventForm.addEventListener('submit', this.handleNewEvent.bind(this));
+
+            // Botões de visualização
+            document.getElementById('calendarViewDay').addEventListener('click', () => {
+                this.calendar.changeView('timeGridDay');
+                this.updateViewButtons('calendarViewDay');
+            });
+            
+            document.getElementById('calendarViewWeek').addEventListener('click', () => {
+                this.calendar.changeView('timeGridWeek');
+                this.updateViewButtons('calendarViewWeek');
+            });
+            
+            document.getElementById('calendarViewMonth').addEventListener('click', () => {
+                this.calendar.changeView('dayGridMonth');
+                this.updateViewButtons('calendarViewMonth');
+            });
+
+            // Botões de ação do evento
+            document.getElementById('deleteEvent').addEventListener('click', this.handleEventDelete.bind(this));
+            document.getElementById('editEvent').addEventListener('click', this.handleEventEdit.bind(this));
+        },
+
+        updateViewButtons(activeId) {
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(activeId).classList.add('active');
+        },
+
+        handleDateSelect(selectInfo) {
+            const modal = new bootstrap.Modal(document.getElementById('newEventModal'));
+            document.getElementById('eventDate').value = selectInfo.startStr.split('T')[0];
+            if (selectInfo.startStr.includes('T')) {
+                document.getElementById('eventTime').value = selectInfo.startStr.split('T')[1].slice(0, 5);
+            }
+            modal.show();
+        },
+
+        handleEventClick(clickInfo) {
+            const event = clickInfo.event;
+            document.getElementById('eventDetailTitle').textContent = event.title;
+            document.getElementById('eventDetailDate').textContent = event.start.toLocaleString();
+            document.getElementById('eventDetailDescription').textContent = event.extendedProps.description || 'Sem descrição';
+            this.detailsModal.show();
+            this.selectedEvent = event;
+        },
+
+        handleNewEvent(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const eventData = {
+                title: document.getElementById('eventTitle').value,
+                start: document.getElementById('eventDate').value + 
+                       (document.getElementById('eventTime').value ? 'T' + document.getElementById('eventTime').value : ''),
+                description: document.getElementById('eventDescription').value,
+                color: document.getElementById('eventColor').value
+            };
+            
+            this.calendar.addEvent(eventData);
+            
+            // Fechar modal e limpar form
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newEventModal'));
+            modal.hide();
+            e.target.reset();
+            
+            showToast('Evento criado com sucesso!', 'success');
+        },
+
+        handleEventDelete() {
+            if (this.selectedEvent) {
+                this.selectedEvent.remove();
+                this.detailsModal.hide();
+                showToast('Evento excluído com sucesso!', 'success');
+            }
+        },
+
+        handleEventEdit() {
+            // Implementar edição
+            showToast('Funcionalidade em desenvolvimento', 'info');
+        }
+    };
+
+    CalendarApp.init();
+});
+</script>
+{% endblock %} 

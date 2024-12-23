@@ -21,10 +21,9 @@ wheels/
 *.egg
 
 # Virtual Environment
+venv/
 .env
 .venv
-env/
-venv/
 ENV/
 
 # IDE
@@ -32,48 +31,28 @@ ENV/
 .vscode/
 *.swp
 *.swo
-
-# OS
 .DS_Store
-Thumbs.db
-/logs
 
-# Ambiente e credenciais
-.env
-.env.*
-!.env.example
-
-# Certificados SSL
-nginx/ssl/*.key
-nginx/ssl/*.crt
-
-# Arquivos do Loki
-loki/wal/
-loki/chunks/
-loki/tsdb-shipper-active/
-
-# Cache e logs
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
+# Logs
 *.log
 logs/
 
-# Ambiente virtual Python
-venv/
-.venv/
-env/
-.env/
+# Local development
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Arquivos do sistema
-.DS_Store
-Thumbs.db
+# Docker
+.docker/
 
-# IDEs e editores
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Database
+*.sqlite3
+*.db
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover

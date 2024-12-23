@@ -1,10 +1,28 @@
 # Framework Web
-Flask==3.0.2
+Flask==3.0.0
 Flask-CORS==4.0.0
+Flask-Sock==0.6.0
 gunicorn==21.2.0
+python-dotenv==1.0.0
+pydantic==2.5.2
+requests==2.31.0
+aiohttp==3.8.5
 
-# Banco de Dados e Cache
-supabase==2.3.4
+# Supabase
+supabase==2.0.3
+postgrest==0.13.1
+
+# Autenticação
+clerk-sdk-python==0.1.1
+python-jose==3.3.0
 
 # IA e Machine Learning
+google-generativeai==0.3.1
 langchain==0.1.9
+
+# Desenvolvimento
+pytest==7.4.3
+pytest-cov==4.1.0
+black==23.11.0
+flake8==6.1.0
+mypy==1.5.1
