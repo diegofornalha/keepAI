@@ -47,15 +47,5 @@
             </div>
         </div>
     </div>
-
-    {% if not current_user.is_authenticated %}
-    <div class="row mt-5">
-        <div class="col text-center">
-            <p class="lead">Comece agora mesmo!</p>
-            <a href="{{ url_for('auth.register') }}" class="btn btn-lg btn-primary me-3">Criar Conta</a>
-            <a href="{{ url_for('auth.login') }}" class="btn btn-lg btn-outline-primary">Entrar</a>
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %} 

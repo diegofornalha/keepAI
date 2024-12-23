@@ -11,8 +11,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-    <!-- Clerk -->
-    <script src="https://cdn.clerk.dev/v1/clerk.js"></script>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-light">
@@ -48,9 +46,6 @@
                         </a>
                     </li>
                 </ul>
-                <div class="navbar-nav">
-                    <div id="user-button"></div>
-                </div>
             </div>
         </div>
     </nav>
@@ -85,14 +80,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <!-- Clerk Initialization -->
-    <script>
-        window.Clerk.load({
-            publishableKey: '{{ config.CLERK_PUBLISHABLE_KEY }}'
-        }).then(() => {
-            const userButton = window.Clerk.mountUserButton(document.getElementById('user-button'));
-        });
-    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html> 

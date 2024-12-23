@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template, jsonify, Response, request
-from server.routes.auth import require_auth
 from server.services.ai import process_chat_message
 
 main_bp = Blueprint("main", __name__)
@@ -16,37 +15,31 @@ def health() -> tuple[Response, int]:
 
 
 @main_bp.route("/notes")
-@require_auth
 def notes() -> str:
     return render_template("notes.html")
 
 
 @main_bp.route("/tasks")
-@require_auth
 def tasks() -> str:
     return render_template("tasks.html")
 
 
 @main_bp.route("/calendar")
-@require_auth
 def calendar() -> str:
     return render_template("calendar.html")
 
 
 @main_bp.route("/settings")
-@require_auth
 def settings() -> str:
     return render_template("settings.html")
 
 
 @main_bp.route("/chat")
-@require_auth
 def chat() -> str:
     return render_template("chat.html")
 
 
 @main_bp.route("/api/v1/chat", methods=["POST"])
-@require_auth
 def chat_message() -> tuple[Response, int]:
     data = request.get_json()
     message = data.get("message")
