@@ -9,6 +9,7 @@ from flask import (
     request,
 )
 from flask_sock import Sock
+from flasgger import swag_from
 
 from keepai.apps.server.modules.auth import (
     middleware as auth_middleware,
@@ -25,7 +26,61 @@ sock = Sock()
 @chat_bp.route("/sessions", methods=["GET"])
 @auth_middleware.auth_required
 def get_sessions():
-    """Lista todas as sessões de chat do usuário"""
+    """
+    Lista todas as sessões de chat do usuário
+    ---
+    tags:
+      - Chat
+    security:
+      - Bearer: []
+    parameters:
+      - name: page
+        in: query
+        type: integer
+        default: 1
+        description: Número da página
+      - name: per_page
+        in: query
+        type: integer
+        default: 10
+        description: Itens por página
+    responses:
+      200:
+        description: Lista de sessões de chat
+        schema:
+          type: object
+          properties:
+            chats:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  user_id:
+                    type: string
+                  title:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+            total:
+              type: integer
+            page:
+              type: integer
+            per_page:
+              type: integer
+      401:
+        description: Não autorizado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+    """
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
 
@@ -48,7 +103,52 @@ def get_sessions():
 
 @chat_bp.route("/sessions", methods=["POST"])
 async def create_session():
-    """Cria uma nova sessão de chat"""
+    """
+    Cria uma nova sessão de chat
+    ---
+    tags:
+      - Chat
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - user_id
+          properties:
+            user_id:
+              type: string
+              description: ID do usuário
+            title:
+              type: string
+              description: Título da sessão
+    responses:
+      201:
+        description: Sessão criada com sucesso
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+            user_id:
+              type: string
+            title:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+      400:
+        description: Dados inválidos
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+    """
     user_id = request.json.get("user_id")
     title = request.json.get("title")
 
@@ -64,7 +164,59 @@ async def create_session():
 @chat_bp.route("/sessions/<session_id>", methods=["GET"])
 @auth_middleware.auth_required
 def get_session(session_id: str):
-    """Retorna uma sessão específica"""
+    """
+    Retorna uma sessão específica
+    ---
+    tags:
+      - Chat
+    security:
+      - Bearer: []
+    parameters:
+      - name: session_id
+        in: path
+        type: string
+        required: true
+        description: ID da sessão
+    responses:
+      200:
+        description: Sessão encontrada
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+            user_id:
+              type: string
+            title:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+      401:
+        description: Não autorizado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+      403:
+        description: Acesso negado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+      404:
+        description: Sessão não encontrada
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+    """
     chat_service = g.container.get_service(chat_services.ChatService)
     session = chat_service.get_session(session_id)
 
@@ -80,7 +232,68 @@ def get_session(session_id: str):
 @chat_bp.route("/sessions/<session_id>", methods=["PUT"])
 @auth_middleware.auth_required
 def update_session(session_id: str):
-    """Atualiza uma sessão de chat"""
+    """
+    Atualiza uma sessão de chat
+    ---
+    tags:
+      - Chat
+    security:
+      - Bearer: []
+    parameters:
+      - name: session_id
+        in: path
+        type: string
+        required: true
+        description: ID da sessão
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            title:
+              type: string
+              description: Novo título da sessão
+    responses:
+      200:
+        description: Sessão atualizada com sucesso
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+            user_id:
+              type: string
+            title:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+      401:
+        description: Não autorizado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+      403:
+        description: Acesso negado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+      404:
+        description: Sessão não encontrada
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+    """
     data = request.get_json()
     title = data.get("title")
 
@@ -100,7 +313,44 @@ def update_session(session_id: str):
 @chat_bp.route("/sessions/<session_id>", methods=["DELETE"])
 @auth_middleware.auth_required
 def delete_session(session_id: str):
-    """Remove uma sessão de chat"""
+    """
+    Remove uma sessão de chat
+    ---
+    tags:
+      - Chat
+    security:
+      - Bearer: []
+    parameters:
+      - name: session_id
+        in: path
+        type: string
+        required: true
+        description: ID da sessão
+    responses:
+      204:
+        description: Sessão removida com sucesso
+      401:
+        description: Não autorizado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+      403:
+        description: Acesso negado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+      404:
+        description: Sessão não encontrada
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+    """
     chat_service = g.container.get_service(chat_services.ChatService)
     session = chat_service.get_session(session_id)
 
@@ -117,7 +367,87 @@ def delete_session(session_id: str):
 @chat_bp.route("/sessions/<session_id>/messages", methods=["GET"])
 @auth_middleware.auth_required
 def get_messages(session_id: str):
-    """Lista todas as mensagens de uma sessão"""
+    """
+    Lista todas as mensagens de uma sessão
+    ---
+    tags:
+      - Chat
+    security:
+      - Bearer: []
+    parameters:
+      - name: session_id
+        in: path
+        type: string
+        required: true
+        description: ID da sessão
+      - name: page
+        in: query
+        type: integer
+        default: 1
+        description: Número da página
+      - name: per_page
+        in: query
+        type: integer
+        default: 50
+        description: Itens por página
+    responses:
+      200:
+        description: Lista de mensagens
+        schema:
+          type: object
+          properties:
+            messages:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  chat_id:
+                    type: string
+                  user_id:
+                    type: string
+                  role:
+                    type: string
+                    enum: [user, assistant]
+                  content:
+                    type: string
+                  status:
+                    type: string
+                    enum: [pending, sent, delivered, read]
+                  created_at:
+                    type: string
+                    format: date-time
+            total:
+              type: integer
+            chat_id:
+              type: string
+            page:
+              type: integer
+            per_page:
+              type: integer
+      401:
+        description: Não autorizado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+      403:
+        description: Acesso negado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+      404:
+        description: Sessão não encontrada
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+    """
     chat_service = g.container.get_service(chat_services.ChatService)
     session = chat_service.get_session(session_id)
 
@@ -146,7 +476,29 @@ def get_messages(session_id: str):
 @sock.route("/chat/<session_id>")
 @auth_middleware.auth_required
 async def chat_socket(ws, session_id: str):
-    """WebSocket para chat em tempo real"""
+    """
+    WebSocket para chat em tempo real
+    ---
+    tags:
+      - Chat
+    security:
+      - Bearer: []
+    parameters:
+      - name: session_id
+        in: path
+        type: string
+        required: true
+        description: ID da sessão
+    responses:
+      101:
+        description: Conexão WebSocket estabelecida
+      401:
+        description: Não autorizado
+      403:
+        description: Acesso negado
+      404:
+        description: Sessão não encontrada
+    """
     chat_service = g.container.get_service(chat_services.ChatService)
     session = chat_service.get_session(session_id)
 
