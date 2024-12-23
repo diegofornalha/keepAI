@@ -1,7 +1,9 @@
 from datetime import datetime
+from typing import Union, Optional
+from flask import Flask
 
 
-def format_datetime(value):
+def format_datetime(value: Optional[Union[str, datetime]]) -> str:
     """Formata uma string ISO 8601 para um formato mais amigável"""
     if not value:
         return ""
@@ -12,9 +14,9 @@ def format_datetime(value):
             dt = value
         return dt.strftime("%d/%m/%Y %H:%M")
     except (ValueError, AttributeError):
-        return value
+        return str(value)
 
 
-def register_filters(app):
+def register_filters(app: Flask) -> None:
     """Registra os filtros personalizados no app Flask"""
     app.jinja_env.filters["datetime"] = format_datetime

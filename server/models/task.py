@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 
@@ -7,10 +7,10 @@ class Task:
         self,
         title: str,
         description: str,
-        due_date: datetime = None,
+        due_date: Optional[datetime] = None,
         priority: str = "medium",
         status: str = "pending",
-    ):
+    ) -> None:
         self.title = title
         self.description = description
         self.due_date = due_date
@@ -30,7 +30,7 @@ class Task:
             "updated_at": self.updated_at.isoformat(),
         }
 
-    def update(self, **kwargs) -> None:
+    def update(self, **kwargs: Any) -> None:
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -38,7 +38,7 @@ class Task:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Task":
-        due_date = (
+        due_date: Optional[datetime] = (
             datetime.fromisoformat(data["due_date"]) if data.get("due_date") else None
         )
         return cls(

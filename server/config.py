@@ -19,3 +19,8 @@ class Config:
 
     # Google Gemini
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+    # Configurações de Sessão
+    SESSION_TYPE = "filesystem"
+    SESSION_PERMANENT = False  # A sessão expira quando o navegador é fechado
+    PERMANENT_SESSION_LIFETIME = 1800  # 30 minutos em segundos

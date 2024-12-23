@@ -1,5 +1,8 @@
+from typing import Dict, Any
+
+
 class Note:
-    def __init__(self, data):
+    def __init__(self, data: Dict[str, Any]) -> None:
         self.id = data.get("id")
         self.title = data.get("title")
         self.content = data.get("content")
@@ -7,7 +10,7 @@ class Note:
         self.created_at = data.get("created_at")
         self.updated_at = data.get("updated_at")
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
             "title": self.title,
@@ -17,5 +20,5 @@ class Note:
             "updated_at": self.updated_at,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Note {self.title}>"

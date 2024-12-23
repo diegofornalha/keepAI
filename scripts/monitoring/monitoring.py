@@ -1,47 +1,44 @@
-import psutil
 import time
-import logging
-from prometheus_client import start_http_server, Gauge, Counter
-import os
+from typing import Dict, Any, Optional, cast, Type, Union
 
-# Métricas Prometheus
-cpu_usage = Gauge("cpu_usage_percent", "CPU usage in percent")
-memory_usage = Gauge("memory_usage_percent", "Memory usage in percent")
-requests_total = Counter("requests_total", "Total requests processed")
-request_duration = Gauge("request_duration_seconds", "Request duration in seconds")
+try:
+    import psutil
+    from prometheus_client import start_http_server, Gauge  # type: ignore[import-not-found]
+except ImportError:
+    psutil = cast(Any, None)
+    start_http_server = cast(Any, None)
+    Gauge = cast(Any, None)
 
 
-class SystemMonitor:
-    def __init__(self):
-        self.logger = logging.getLogger("system_monitor")
+# Métricas do Prometheus
+if Gauge:
+    cpu_usage = Gauge("cpu_usage_percent", "CPU usage in percent")
+    memory_usage = Gauge("memory_usage_percent", "Memory usage in percent")
+    disk_usage = Gauge("disk_usage_percent", "Disk usage in percent")
+else:
+    cpu_usage = None
+    memory_usage = None
+    disk_usage = None
 
-    def collect_metrics(self):
-        while True:
-            try:
-                # CPU
-                cpu_percent = psutil.cpu_percent()
-                cpu_usage.set(cpu_percent)
 
-                # Memória
-                memory = psutil.virtual_memory()
-                memory_usage.set(memory.percent)
+def collect_metrics() -> None:
+    """Coleta métricas do sistema"""
+    if psutil and cpu_usage and memory_usage and disk_usage:
+        cpu_usage.set(psutil.cpu_percent())
+        memory_usage.set(psutil.virtual_memory().percent)
+        disk_usage.set(psutil.disk_usage("/").percent)
 
-                # Logs
-                if cpu_percent > 80:
-                    self.logger.warning(f"Alto uso de CPU: {cpu_percent}%")
-                if memory.percent > 80:
-                    self.logger.warning(f"Alto uso de memória: {memory.percent}%")
 
-                time.sleep(5)
+def main() -> None:
+    """Função principal do monitoramento"""
+    # Inicia o servidor HTTP do Prometheus na porta 8000
+    if start_http_server:
+        start_http_server(8000)
 
-            except Exception as e:
-                self.logger.error(f"Erro ao coletar métricas: {str(e)}")
+    while True:
+        collect_metrics()
+        time.sleep(15)  # Coleta métricas a cada 15 segundos
 
 
 if __name__ == "__main__":
-    # Inicia servidor Prometheus
-    start_http_server(int(os.getenv("METRICS_PORT", 9090)))
-
-    # Inicia monitoramento
-    monitor = SystemMonitor()
-    monitor.collect_metrics()
+    main()

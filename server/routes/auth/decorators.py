@@ -1,5 +1,7 @@
 from functools import wraps
-from flask import request, jsonify
+from typing import Any, Union, cast
+from flask import request, jsonify, Response
+from .types import AuthenticatedFunction
 import jwt
 import os
 
@@ -8,9 +10,11 @@ CLERK_JWT_KEY = os.getenv("CLERK_JWT_KEY")
 CLERK_FRONTEND_API = os.getenv("CLERK_FRONTEND_API")
 
 
-def require_auth(f):
+def require_auth(f: AuthenticatedFunction) -> AuthenticatedFunction:
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorated(
+        *args: Any, **kwargs: Any
+    ) -> Union[Response, tuple[Response, int], str]:
         auth_header = request.headers.get("Authorization")
         if not auth_header:
             return jsonify({"message": "Token não fornecido"}), 401
@@ -32,11 +36,11 @@ def require_auth(f):
             )
 
             # Adicionar o user_id ao request para uso nas rotas
-            request.user_id = decoded.get("sub")
+            request.user_id = decoded.get("sub")  # type: ignore
             return f(*args, **kwargs)
         except jwt.ExpiredSignatureError:
             return jsonify({"message": "Token expirado"}), 401
         except jwt.InvalidTokenError:
             return jsonify({"message": "Token inválido"}), 401
 
-    return decorated
+    return cast(AuthenticatedFunction, decorated)

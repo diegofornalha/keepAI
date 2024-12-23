@@ -1,13 +1,9 @@
 from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
-from alembic import context
-
 import os
 import sys
 from dotenv import load_dotenv
+from typing import Optional, Any, Dict
+from supabase import create_client, Client
 
 # Adicionar o diretório raiz ao PATH para importar os modelos
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -15,80 +11,38 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Carregar variáveis de ambiente
 load_dotenv()
 
-# Importar os modelos e configurações
-from server.app import app, db
-import server.models
-
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
-config = context.config
-
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
-
-# add your model's MetaData object here
-# for 'autogenerate' support
-target_metadata = db.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+# Configuração do Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 
-def get_url():
-    return os.getenv("DATABASE_URL")
+def get_supabase_client() -> Client:
+    """Retorna um cliente Supabase configurado"""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise ValueError("SUPABASE_URL e SUPABASE_KEY devem estar configurados")
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
+def run_migrations() -> None:
+    """Executa as migrações no Supabase
 
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-
+    Como o Supabase gerencia as migrações através do dashboard ou CLI,
+    este arquivo serve apenas como referência para a configuração.
+    Para executar migrações, use:
+    1. Dashboard do Supabase
+    2. Supabase CLI
+    3. Migrations SQL direto no editor SQL
     """
-    url = get_url()
-    context.configure(
-        url=url,
-        target_metadata=target_metadata,
-        literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
+    print(
+        """
+    O Supabase não usa o Alembic para migrações.
+    Por favor, use uma das seguintes opções:
+    1. Dashboard do Supabase
+    2. Supabase CLI
+    3. Migrations SQL direto no editor SQL
+    """
     )
 
-    with context.begin_transaction():
-        context.run_migrations()
 
-
-def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
-
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
-    configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = get_url()
-    connectable = engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-
-    with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
-
-        with context.begin_transaction():
-            context.run_migrations()
-
-
-if context.is_offline_mode():
-    run_migrations_offline()
-else:
-    run_migrations_online()
+if __name__ == "__main__":
+    run_migrations()

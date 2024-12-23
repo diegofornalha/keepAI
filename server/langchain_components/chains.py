@@ -1,13 +1,16 @@
 from typing import Dict, Any
+from pydantic import SecretStr
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 
 class NoteChain:
-    def __init__(self, api_key: str):
-        self.llm = ChatOpenAI(
-            temperature=0.7, model_name="gpt-3.5-turbo", openai_api_key=api_key
+    def __init__(self, api_key: str) -> None:
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-pro",
+            api_key=SecretStr(api_key),
+            temperature=0.7,
         )
 
         self.prompt = PromptTemplate(

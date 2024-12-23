@@ -1,14 +1,17 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional, cast
+from pydantic import SecretStr
 from langchain.agents import AgentType, initialize_agent
-from langchain.chat_models import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.memory import ConversationSummaryMemory
 from langchain.tools import Tool
 
 
 class AutonomousNotes:
-    def __init__(self, api_key: str):
-        self.llm = ChatOpenAI(
-            temperature=0.7, model_name="gpt-3.5-turbo", openai_api_key=api_key
+    def __init__(self, api_key: str) -> None:
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-pro",
+            api_key=SecretStr(api_key),
+            temperature=0.7,
         )
 
         self.memory = ConversationSummaryMemory(
@@ -48,25 +51,25 @@ class AutonomousNotes:
 
     def _create_note(self, title: str, content: str) -> Dict[str, Any]:
         # Implementar criação de nota
-        pass
+        return {"success": False, "error": "Não implementado"}
 
     def _update_note(
-        self, note_id: str, title: str = None, content: str = None
+        self, note_id: str, title: Optional[str] = None, content: Optional[str] = None
     ) -> Dict[str, Any]:
         # Implementar atualização de nota
-        pass
+        return {"success": False, "error": "Não implementado"}
 
-    def _delete_note(self, note_id: str) -> bool:
+    def _delete_note(self, note_id: str) -> Dict[str, Any]:
         # Implementar exclusão de nota
-        pass
+        return {"success": False, "error": "Não implementado"}
 
-    def _search_notes(self, query: str) -> list[Dict[str, Any]]:
+    def _search_notes(self, query: str) -> Dict[str, Any]:
         # Implementar pesquisa de notas
-        pass
+        return {"success": False, "error": "Não implementado"}
 
     def process_message(self, message: str) -> str:
         try:
-            response = self.agent.run(message)
+            response = cast(str, self.agent.run(message))
             return response
         except Exception as e:
             return f"Erro ao processar mensagem: {str(e)}"

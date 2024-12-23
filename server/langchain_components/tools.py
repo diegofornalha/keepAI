@@ -1,34 +1,40 @@
-from typing import Dict, Any
-from langchain.tools import BaseTool
+from typing import List
+from langchain.tools import Tool
+from langchain.agents import AgentType, AgentExecutor, initialize_agent
+from langchain_google_genai import ChatGoogleGenerativeAI
+from pydantic import SecretStr
+from server.config.settings import settings
 
 
-class NoteTool(BaseTool):
-    name = "note"
-    description = "Ferramenta para criar e gerenciar notas"
+def get_tools() -> List[Tool]:
+    """Retorna a lista de ferramentas disponíveis"""
+    return [
+        Tool(
+            name="search",
+            func=lambda x: "Resultados da busca",
+            description="Realiza uma busca na base de conhecimento",
+        ),
+        Tool(
+            name="create_note",
+            func=lambda x: "Nota criada com sucesso",
+            description="Cria uma nova nota",
+        ),
+    ]
 
-    def _run(self, query: str) -> Dict[str, Any]:
-        try:
-            # Implementar lógica de processamento de notas
-            return {"success": True, "result": "Nota processada com sucesso"}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
 
-    async def _arun(self, query: str) -> Dict[str, Any]:
-        # Implementar versão assíncrona se necessário
-        return await self._run(query)
+def get_agent() -> AgentExecutor:
+    """Retorna um agente configurado com as ferramentas"""
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-pro",
+        api_key=SecretStr(settings.GEMINI_API_KEY or ""),
+        temperature=0.7,
+    )
 
+    tools = get_tools()
 
-class TaskTool(BaseTool):
-    name = "task"
-    description = "Ferramenta para criar e gerenciar tarefas"
-
-    def _run(self, query: str) -> Dict[str, Any]:
-        try:
-            # Implementar lógica de processamento de tarefas
-            return {"success": True, "result": "Tarefa processada com sucesso"}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
-    async def _arun(self, query: str) -> Dict[str, Any]:
-        # Implementar versão assíncrona se necessário
-        return await self._run(query)
+    return initialize_agent(
+        tools,
+        llm,
+        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        verbose=True,
+    )

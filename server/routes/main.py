@@ -1,31 +1,13 @@
-from flask import Blueprint, render_template, jsonify, request, Response
-from functools import wraps
-from typing import Callable, Any
-from server.models.user import User
+from flask import Blueprint, render_template, jsonify, Response, request
+from server.routes.auth import require_auth
+from server.services.ai import process_chat_message
 
 main_bp = Blueprint("main", __name__)
 
 
-def clerk_auth_required(f: Callable) -> Callable:
-    @wraps(f)
-    def decorated_function(*args: Any, **kwargs: Any) -> Any:
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            return jsonify({"error": "Unauthorized"}), 401
-
-        # TODO: Validar o token JWT do Clerk e obter os dados do usuário
-        # Por enquanto, usando um usuário de teste
-        test_user = User(id=1, name="Usuário Teste", email="teste@example.com")
-        return f(*args, current_user=test_user, **kwargs)
-
-    return decorated_function
-
-
 @main_bp.route("/")
 def index() -> str:
-    # Por enquanto, usando um usuário de teste
-    test_user = User(id=1, name="Usuário Teste", email="teste@example.com")
-    return render_template("index.html", current_user=test_user)
+    return render_template("index.html")
 
 
 @main_bp.route("/health")
@@ -34,24 +16,46 @@ def health() -> tuple[Response, int]:
 
 
 @main_bp.route("/notes")
-@clerk_auth_required
-def notes(current_user: User) -> str:
-    return render_template("notes.html", current_user=current_user)
+@require_auth
+def notes() -> str:
+    return render_template("notes.html")
 
 
 @main_bp.route("/tasks")
-@clerk_auth_required
-def tasks(current_user: User) -> str:
-    return render_template("tasks.html", current_user=current_user)
+@require_auth
+def tasks() -> str:
+    return render_template("tasks.html")
 
 
 @main_bp.route("/calendar")
-@clerk_auth_required
-def calendar(current_user: User) -> str:
-    return render_template("calendar.html", current_user=current_user)
+@require_auth
+def calendar() -> str:
+    return render_template("calendar.html")
 
 
 @main_bp.route("/settings")
-@clerk_auth_required
-def settings(current_user: User) -> str:
-    return render_template("settings.html", current_user=current_user)
+@require_auth
+def settings() -> str:
+    return render_template("settings.html")
+
+
+@main_bp.route("/chat")
+@require_auth
+def chat() -> str:
+    return render_template("chat.html")
+
+
+@main_bp.route("/api/v1/chat", methods=["POST"])
+@require_auth
+def chat_message() -> tuple[Response, int]:
+    data = request.get_json()
+    message = data.get("message")
+
+    if not message:
+        return jsonify({"error": "Mensagem não fornecida"}), 400
+
+    try:
+        response = process_chat_message(message)
+        return jsonify({"response": response}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

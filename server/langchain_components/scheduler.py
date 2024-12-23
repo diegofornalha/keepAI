@@ -1,54 +1,29 @@
-from typing import Dict, Any
-from datetime import datetime
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.date import DateTrigger
-from apscheduler.triggers.interval import IntervalTrigger
+from langchain.agents import AgentType, AgentExecutor, initialize_agent
+from langchain.tools import Tool
+from langchain_google_genai import ChatGoogleGenerativeAI
+from pydantic import SecretStr
+from server.config.settings import settings
 
 
-class TaskScheduler:
-    def __init__(self):
-        self.scheduler = BackgroundScheduler()
-        self.scheduler.start()
+def get_scheduler_agent() -> AgentExecutor:
+    """Retorna um agente para agendamento de tarefas"""
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-pro",
+        api_key=SecretStr(settings.GEMINI_API_KEY or ""),
+        temperature=0.7,
+    )
 
-    def schedule_task(
-        self, task_id: str, func: callable, trigger_type: str, **trigger_args
-    ) -> Dict[str, Any]:
-        try:
-            if trigger_type == "date":
-                trigger = DateTrigger(
-                    run_date=trigger_args.get("run_date", datetime.now())
-                )
-            elif trigger_type == "interval":
-                trigger = IntervalTrigger(
-                    seconds=trigger_args.get("seconds", 0),
-                    minutes=trigger_args.get("minutes", 0),
-                    hours=trigger_args.get("hours", 0),
-                )
-            else:
-                return {"success": False, "error": "Tipo de trigger não suportado"}
+    tools = [
+        Tool(
+            name="calendar",
+            func=lambda x: "Evento agendado com sucesso",
+            description="Agenda um evento no calendário",
+        )
+    ]
 
-            self.scheduler.add_job(func=func, trigger=trigger, id=task_id)
-            return {"success": True}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
-    def remove_task(self, task_id: str) -> Dict[str, Any]:
-        try:
-            self.scheduler.remove_job(task_id)
-            return {"success": True}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
-    def get_tasks(self) -> Dict[str, Any]:
-        try:
-            jobs = self.scheduler.get_jobs()
-            return {"success": True, "jobs": jobs}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
-    def shutdown(self) -> Dict[str, Any]:
-        try:
-            self.scheduler.shutdown()
-            return {"success": True}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
+    return initialize_agent(
+        tools,
+        llm,
+        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        verbose=True,
+    )

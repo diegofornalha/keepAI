@@ -2,7 +2,7 @@ import os
 
 
 class Settings:
-    def __init__(self):
+    def __init__(self) -> None:
         self.FLASK_ENV = os.getenv("FLASK_ENV", "development")
         self.DEBUG = self.FLASK_ENV == "development"
         self.TESTING = False

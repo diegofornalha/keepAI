@@ -1,10 +1,22 @@
 from typing import Dict, Any
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from pydantic import SecretStr
+
+
+def get_embeddings(api_key: str) -> GoogleGenerativeAIEmbeddings:
+    """Retorna uma instância de GoogleGenerativeAIEmbeddings"""
+    return GoogleGenerativeAIEmbeddings(
+        model="models/embedding-001",
+        google_api_key=SecretStr(api_key),
+    )
 
 
 class EmbeddingGenerator:
     def __init__(self, api_key: str):
-        self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        self.embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/embedding-001",
+            google_api_key=SecretStr(api_key),
+        )
 
     def generate_embeddings(self, text: str) -> Dict[str, Any]:
         try:

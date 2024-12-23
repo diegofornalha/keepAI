@@ -1,6 +1,7 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, Response
 from server.database import supabase
 from datetime import datetime
+from typing import Dict, Any
 import os
 import jwt
 import requests
@@ -13,15 +14,16 @@ CLERK_API_KEY = os.getenv("CLERK_API_KEY")
 CLERK_FRONTEND_API = os.getenv("CLERK_FRONTEND_API")
 
 
-def get_jwks():
+def get_jwks() -> Dict[str, Any]:
     """Busca as chaves públicas do Clerk"""
     url = f"https://{CLERK_FRONTEND_API}/.well-known/jwks.json"
     response = requests.get(url)
-    return response.json()
+    result: Dict[str, Any] = response.json()
+    return result
 
 
 @auth_bp.route("/verify", methods=["POST"])
-def verify_token():
+def verify_token() -> tuple[Response, int] | Response:
     """Verifica o token JWT do Clerk"""
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -66,7 +68,7 @@ def verify_token():
 
 
 @auth_bp.route("/user", methods=["GET"])
-def get_user():
+def get_user() -> tuple[Response, int] | Response:
     """Retorna os dados do usuário atual"""
     auth_header = request.headers.get("Authorization")
     if not auth_header:

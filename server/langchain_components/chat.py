@@ -1,5 +1,6 @@
 from typing import Dict, Any
-from langchain.chat_models import ChatOpenAI
+from pydantic import SecretStr
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain.prompts import (
@@ -11,9 +12,11 @@ from langchain.prompts import (
 
 
 class ChatAssistant:
-    def __init__(self, api_key: str):
-        self.llm = ChatOpenAI(
-            temperature=0.7, model_name="gpt-3.5-turbo", openai_api_key=api_key
+    def __init__(self, api_key: str) -> None:
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-pro",
+            api_key=SecretStr(api_key),
+            temperature=0.7,
         )
 
         self.memory = ConversationBufferMemory(
@@ -41,3 +44,12 @@ class ChatAssistant:
             return {"success": True, "response": response}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+
+def get_chat(api_key: str) -> ChatGoogleGenerativeAI:
+    """Retorna uma instância de ChatGoogleGenerativeAI"""
+    return ChatGoogleGenerativeAI(
+        model="gemini-pro",
+        api_key=SecretStr(api_key),
+        temperature=0.7,
+    )

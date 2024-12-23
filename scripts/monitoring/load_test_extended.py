@@ -2,19 +2,22 @@ import asyncio
 import aiohttp
 import time
 import statistics
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 from datetime import datetime
 import json
 import os
+from typing import Dict, Any, List, Optional, Tuple
 
 
 class ExtendedLoadTester:
-    def __init__(self):
-        self.results = []
-        self.errors = []
-        self.start_time = None
+    def __init__(self) -> None:
+        self.results: List[Dict[str, Any]] = []
+        self.errors: List[Dict[str, Any]] = []
+        self.start_time: Optional[float] = None
 
-    async def run_scenario(self, scenario_name: str, endpoint: str, payload: dict):
+    async def run_scenario(
+        self, scenario_name: str, endpoint: str, payload: Dict[str, Any]
+    ) -> Tuple[Optional[float], Optional[int]]:
         try:
             async with aiohttp.ClientSession() as session:
                 start = time.time()
@@ -43,9 +46,9 @@ class ExtendedLoadTester:
             )
             return None, None
 
-    def generate_report(self):
+    def generate_report(self) -> Dict[str, Any]:
         if not self.results:
-            return "Sem resultados para reportar"
+            return {"message": "Sem resultados para reportar"}
 
         # Análise estatística
         durations = [r["duration"] for r in self.results]
@@ -75,11 +78,11 @@ class ExtendedLoadTester:
         return report
 
 
-async def main():
+async def main() -> None:
     tester = ExtendedLoadTester()
 
     # Cenários de teste
-    scenarios = [
+    scenarios: List[Dict[str, Any]] = [
         {
             "name": "Processamento de Nota",
             "endpoint": "http://localhost:3000/api/process-note",
