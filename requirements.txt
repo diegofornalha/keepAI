@@ -1,14 +1,11 @@
 # Framework Web
 Flask==3.0.0
-Flask-Login==0.6.3
 Flask-WTF==1.2.1
 Flask-Cors==4.0.0
 
-# Autenticação
-clerk-sdk-python==0.7.0
-
 # Banco de Dados
-supabase==2.3.4
+supabase==1.0.3
+httpx==0.23.3
 
 # Segurança
 bcrypt==4.1.1

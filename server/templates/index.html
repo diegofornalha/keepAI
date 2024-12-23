@@ -14,7 +14,7 @@
                 <div class="list-group list-group-flush">
                     {% if recent_notes %}
                         {% for note in recent_notes %}
-                            <a href="{{ url_for('notes', note_id=note.id) }}" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for('main.notes', note_id=note.id) }}" class="list-group-item list-group-item-action">
                                 {{ note.title }}
                                 <small class="text-muted d-block">{{ note.created_at|datetime }}</small>
                             </a>
@@ -23,7 +23,7 @@
                         <p class="text-muted">Nenhuma nota recente.</p>
                     {% endif %}
                 </div>
-                <a href="{{ url_for('notes') }}" class="btn btn-outline-primary mt-3">Ver Todas</a>
+                <a href="{{ url_for('main.notes') }}" class="btn btn-outline-primary mt-3">Ver Todas</a>
             </div>
         </div>
     </div>
@@ -50,7 +50,7 @@
                         <p class="text-muted">Nenhuma tarefa pendente.</p>
                     {% endif %}
                 </div>
-                <a href="{{ url_for('tasks') }}" class="btn btn-outline-success mt-3">Ver Todas</a>
+                <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-success mt-3">Ver Todas</a>
             </div>
         </div>
     </div>
@@ -65,7 +65,7 @@
                 <div class="list-group list-group-flush">
                     {% if upcoming_events %}
                         {% for event in upcoming_events %}
-                            <a href="{{ url_for('calendar') }}" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for('main.calendar') }}" class="list-group-item list-group-item-action">
                                 {{ event.title }}
                                 <small class="text-muted d-block">{{ event.start_time|datetime }}</small>
                             </a>
@@ -74,7 +74,7 @@
                         <p class="text-muted">Nenhum evento próximo.</p>
                     {% endif %}
                 </div>
-                <a href="{{ url_for('calendar') }}" class="btn btn-outline-warning mt-3">Ver Todos</a>
+                <a href="{{ url_for('main.calendar') }}" class="btn btn-outline-warning mt-3">Ver Todos</a>
             </div>
         </div>
     </div>
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
         userInput.value = '';
 
         // Enviar mensagem para o backend
-        fetch('/api/chat', {
+        fetch('/api/v1/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

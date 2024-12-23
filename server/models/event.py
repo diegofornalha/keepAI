@@ -1,33 +1,26 @@
-from server.app import db
-from datetime import datetime
-
-
-class Event(db.Model):
-    __tablename__ = "events"
-
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text)
-    start_time = db.Column(db.DateTime, nullable=False)
-    end_time = db.Column(db.DateTime, nullable=False)
-    color = db.Column(db.String(7), default="#2563eb")  # Formato hex: #RRGGBB
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+class Event:
+    def __init__(self, data):
+        self.id = data.get("id")
+        self.title = data.get("title")
+        self.description = data.get("description")
+        self.start_time = data.get("start_time")
+        self.end_time = data.get("end_time")
+        self.color = data.get("color", "#2563eb")  # Formato hex: #RRGGBB
+        self.user_id = data.get("user_id")
+        self.created_at = data.get("created_at")
+        self.updated_at = data.get("updated_at")
 
     def to_dict(self):
         return {
             "id": self.id,
             "title": self.title,
             "description": self.description,
-            "start": self.start_time.isoformat(),
-            "end": self.end_time.isoformat(),
+            "start": self.start_time,
+            "end": self.end_time,
             "color": self.color,
             "user_id": self.user_id,
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
         }
 
     def __repr__(self):

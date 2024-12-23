@@ -14,13 +14,21 @@
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     
+    <!-- Clerk -->
+    <script src="https://cdn.clerk.dev/v1/clerk.js"></script>
+    <script>
+        window.Clerk.load({
+            publishableKey: '{{ config["CLERK_PUBLISHABLE_KEY"] }}'
+        });
+    </script>
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <i class="fas fa-brain"></i> KeepAI
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -29,22 +37,22 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">
+                        <a class="nav-link" href="{{ url_for('main.index') }}">
                             <i class="fas fa-home"></i> Início
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('notes') }}">
+                        <a class="nav-link" href="{{ url_for('main.notes') }}">
                             <i class="fas fa-sticky-note"></i> Notas
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('tasks') }}">
+                        <a class="nav-link" href="{{ url_for('main.tasks') }}">
                             <i class="fas fa-tasks"></i> Tarefas
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('calendar') }}">
+                        <a class="nav-link" href="{{ url_for('main.calendar') }}">
                             <i class="fas fa-calendar"></i> Calendário
                         </a>
                     </li>
@@ -55,16 +63,7 @@
                         <i class="fas fa-moon"></i>
                     </button>
                     <!-- User Menu -->
-                    <div class="dropdown">
-                        <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('profile') }}">Perfil</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Sair</a></li>
-                        </ul>
-                    </div>
+                    <div id="user-button"></div>
                 </div>
             </div>
         </div>
@@ -123,6 +122,24 @@
         document.documentElement.setAttribute('data-bs-theme', savedTheme);
         const icon = document.querySelector('#theme-toggle i');
         icon.classList.replace('fa-moon', savedTheme === 'dark' ? 'fa-sun' : 'fa-moon');
+    </script>
+
+    <!-- Clerk Script -->
+    <script>
+        window.addEventListener('load', async () => {
+            // Inicializar o botão de usuário do Clerk
+            const userButton = document.getElementById('user-button');
+            window.Clerk.mountUserButton(userButton);
+
+            // Verificar autenticação
+            const user = await window.Clerk.user;
+            if (!user) {
+                // Se não estiver autenticado e não estiver na página de login
+                if (!window.location.pathname.includes('/login')) {
+                    window.location.href = '/login';
+                }
+            }
+        });
     </script>
 </body>
 </html> 

@@ -1,37 +1,45 @@
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1
+FROM python:3.11-slim AS builder
 
-# Definir variáveis de ambiente
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /build
 
-# Definir diretório de trabalho
-WORKDIR /app
-
-# Instalar dependências do sistema
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
+# Instalar apenas o essencial para build
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    curl \
+    && python -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools \
+    && apt-get purge -y --auto-remove gcc \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar requirements primeiro para aproveitar o cache do Docker
+# Instalar dependências no venv
+ENV PATH="/opt/venv/bin:$PATH"
 COPY requirements.txt .
-
-# Instalar dependências Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar o resto do código
-COPY . .
+# Stage final: apenas o necessário para Flask
+FROM python:3.11-slim
 
-# Criar diretórios necessários
-RUN mkdir -p server/static server/templates
+# Configurar ambiente Flask
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=server.app:app \
+    FLASK_DEBUG=1 \
+    PYTHONPATH="/app"
 
-# Expor a porta que o Flask vai usar
+WORKDIR /app
+
+# Copiar apenas o necessário
+COPY --from=builder /opt/venv /opt/venv
+COPY server ./server
+
+# Configurar usuário e diretórios Flask
+RUN useradd -m -u 1000 appuser \
+    && chown -R appuser:appuser /app
+
+USER appuser
 EXPOSE 5001
 
-# Comando para rodar o servidor em modo de desenvolvimento
+# Usar modo de desenvolvimento para melhor feedback
 CMD ["flask", "run", "--host=0.0.0.0", "--port=5001", "--reload"]

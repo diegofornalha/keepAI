@@ -1,11 +1,60 @@
-{% extends "base.html" %}
+{% extends "layout/base.html" %}
 
 {% block title %}Calendário{% endblock %}
 
-{% block page_title %}Calendário{% endblock %}
-
-{% block head %}
+{% block extra_css %}
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css' rel='stylesheet' />
+<style>
+.calendar-sidebar {
+    border-right: 1px solid var(--bs-border-color);
+    height: calc(100vh - 150px);
+    overflow-y: auto;
+}
+
+.main-calendar {
+    height: calc(100vh - 150px);
+    overflow-y: auto;
+}
+
+.mini-calendar {
+    font-size: 0.8em;
+}
+
+.upcoming-events {
+    margin-top: 1rem;
+}
+
+.upcoming-event-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.upcoming-event-item:hover {
+    background-color: var(--bs-secondary-bg-subtle);
+}
+
+.event-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.event-info {
+    flex: 1;
+}
+
+.event-title {
+    font-weight: 500;
+}
+
+.event-date {
+    font-size: 0.8em;
+    color: var(--bs-secondary-color);
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -16,7 +65,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Eventos</h5>
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#eventModal">
-                    <i class="bi bi-plus-lg"></i> Novo Evento
+                    <i class="fas fa-plus"></i> Novo Evento
                 </button>
             </div>
 
@@ -88,124 +137,233 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js'></script>
 <script>
-    let calendar;
-    let miniCalendar;
+let calendar;
+let miniCalendar;
+let currentEvent = null;
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // Inicialização do Calendário Principal
-        const calendarEl = document.getElementById('calendar');
-        calendar = new FullCalendar.Calendar(calendarEl, {
-            locale: 'pt-br',
-            initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            editable: true,
-            selectable: true,
-            selectMirror: true,
-            dayMaxEvents: true,
-            eventClick: function(info) {
-                // Implementar edição de evento
-            },
-            select: function(info) {
-                // Implementar criação de evento
-                const modal = new bootstrap.Modal(document.getElementById('eventModal'));
-                document.getElementById('eventStart').value = info.startStr;
-                document.getElementById('eventEnd').value = info.endStr;
-                modal.show();
-            }
-        });
-        calendar.render();
-
-        // Inicialização do Mini Calendário
-        const miniCalendarEl = document.getElementById('miniCalendar');
-        miniCalendar = new FullCalendar.Calendar(miniCalendarEl, {
-            locale: 'pt-br',
-            initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev',
-                center: 'title',
-                right: 'next'
-            },
-            height: 'auto',
-            dateClick: function(info) {
-                calendar.gotoDate(info.date);
-            }
-        });
-        miniCalendar.render();
-
-        // Carregar eventos iniciais
-        loadEvents();
-    });
-
-    async function loadEvents() {
-        showLoading();
-        try {
-            // Implementar carregamento de eventos do backend
-        } catch (error) {
-            showToast('Erro ao carregar eventos', 'danger');
-        } finally {
-            hideLoading();
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicialização do Calendário Principal
+    const calendarEl = document.getElementById('calendar');
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'pt-br',
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        editable: true,
+        selectable: true,
+        selectMirror: true,
+        dayMaxEvents: true,
+        eventClick: function(info) {
+            currentEvent = info.event;
+            showEventModal(info.event);
+        },
+        select: function(info) {
+            currentEvent = null;
+            const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+            document.getElementById('eventStart').value = info.startStr;
+            document.getElementById('eventEnd').value = info.endStr;
+            modal.show();
+        },
+        eventDrop: function(info) {
+            updateEvent(info.event);
+        },
+        eventResize: function(info) {
+            updateEvent(info.event);
         }
+    });
+    calendar.render();
+
+    // Inicialização do Mini Calendário
+    const miniCalendarEl = document.getElementById('miniCalendar');
+    miniCalendar = new FullCalendar.Calendar(miniCalendarEl, {
+        locale: 'pt-br',
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev',
+            center: 'title',
+            right: 'next'
+        },
+        height: 'auto',
+        dateClick: function(info) {
+            calendar.gotoDate(info.date);
+        }
+    });
+    miniCalendar.render();
+
+    // Carregar eventos iniciais
+    loadEvents();
+});
+
+function showEventModal(event = null) {
+    const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+    const title = document.getElementById('eventTitle');
+    const description = document.getElementById('eventDescription');
+    const start = document.getElementById('eventStart');
+    const end = document.getElementById('eventEnd');
+    const color = document.getElementById('eventColor');
+
+    if (event) {
+        title.value = event.title;
+        description.value = event.extendedProps.description || '';
+        start.value = event.start ? event.start.toISOString().slice(0, 16) : '';
+        end.value = event.end ? event.end.toISOString().slice(0, 16) : '';
+        color.value = event.backgroundColor || '#2563eb';
+        document.querySelector('.modal-title').textContent = 'Editar Evento';
+    } else {
+        title.value = '';
+        description.value = '';
+        start.value = '';
+        end.value = '';
+        color.value = '#2563eb';
+        document.querySelector('.modal-title').textContent = 'Novo Evento';
     }
 
-    async function saveEvent() {
+    modal.show();
+}
+
+async function loadEvents() {
+    try {
+        const response = await fetch('/api/v1/events');
+        if (!response.ok) throw new Error('Erro ao carregar eventos');
+        
+        const events = await response.json();
+        calendar.removeAllEvents();
+        calendar.addEventSource(events);
+        updateUpcomingEvents();
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao carregar eventos', 'danger');
+    }
+}
+
+async function saveEvent() {
+    const eventData = {
+        title: document.getElementById('eventTitle').value,
+        description: document.getElementById('eventDescription').value,
+        start: document.getElementById('eventStart').value,
+        end: document.getElementById('eventEnd').value,
+        color: document.getElementById('eventColor').value
+    };
+
+    if (!eventData.title || !eventData.start || !eventData.end) {
+        showToast('Preencha os campos obrigatórios', 'warning');
+        return;
+    }
+
+    try {
+        const url = '/api/v1/events' + (currentEvent ? `/${currentEvent.id}` : '');
+        const method = currentEvent ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(eventData)
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar evento');
+
+        const savedEvent = await response.json();
+        if (currentEvent) {
+            currentEvent.remove();
+        }
+        calendar.addEvent(savedEvent);
+        updateUpcomingEvents();
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
+        modal.hide();
+        showToast('Evento salvo com sucesso!', 'success');
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao salvar evento', 'danger');
+    }
+}
+
+async function updateEvent(event) {
+    try {
         const eventData = {
-            title: document.getElementById('eventTitle').value,
-            description: document.getElementById('eventDescription').value,
-            start: document.getElementById('eventStart').value,
-            end: document.getElementById('eventEnd').value,
-            color: document.getElementById('eventColor').value
+            title: event.title,
+            description: event.extendedProps.description,
+            start: event.start.toISOString(),
+            end: event.end ? event.end.toISOString() : event.start.toISOString(),
+            color: event.backgroundColor
         };
 
-        if (!eventData.title || !eventData.start || !eventData.end) {
-            showToast('Preencha os campos obrigatórios', 'warning');
-            return;
-        }
+        const response = await fetch(`/api/v1/events/${event.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(eventData)
+        });
 
-        showLoading();
-        try {
-            // Implementar salvamento no backend
-            calendar.addEvent(eventData);
-            const modal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
-            modal.hide();
-            showToast('Evento criado com sucesso!', 'success');
-        } catch (error) {
-            showToast('Erro ao salvar evento', 'danger');
-        } finally {
-            hideLoading();
-        }
+        if (!response.ok) throw new Error('Erro ao atualizar evento');
+        updateUpcomingEvents();
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao atualizar evento', 'danger');
+        loadEvents(); // Recarregar eventos em caso de erro
     }
+}
 
-    function updateUpcomingEvents() {
-        const upcomingList = document.getElementById('upcomingEventsList');
-        const events = calendar.getEvents();
-        const now = new Date();
+async function deleteEvent() {
+    if (!currentEvent || !confirm('Tem certeza que deseja excluir este evento?')) return;
+
+    try {
+        const response = await fetch(`/api/v1/events/${currentEvent.id}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error('Erro ao excluir evento');
+
+        currentEvent.remove();
+        updateUpcomingEvents();
         
-        // Filtrar e ordenar eventos futuros
-        const upcomingEvents = events
-            .filter(event => event.start >= now)
-            .sort((a, b) => a.start - b.start)
-            .slice(0, 5);
-
-        // Atualizar lista
-        upcomingList.innerHTML = upcomingEvents.length ? 
-            upcomingEvents.map(event => `
-                <div class="upcoming-event-item">
-                    <div class="event-dot" style="background-color: ${event.backgroundColor}"></div>
-                    <div class="event-info">
-                        <div class="event-title">${event.title}</div>
-                        <div class="event-date">${event.start.toLocaleDateString()}</div>
-                    </div>
-                </div>
-            `).join('') :
-            '<p class="text-muted">Nenhum evento próximo</p>';
+        const modal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
+        modal.hide();
+        showToast('Evento excluído com sucesso!', 'success');
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao excluir evento', 'danger');
     }
+}
+
+function updateUpcomingEvents() {
+    const upcomingList = document.getElementById('upcomingEventsList');
+    const events = calendar.getEvents();
+    const now = new Date();
+    
+    // Filtrar e ordenar eventos futuros
+    const upcomingEvents = events
+        .filter(event => event.start >= now)
+        .sort((a, b) => a.start - b.start)
+        .slice(0, 5);
+
+    // Atualizar lista
+    upcomingList.innerHTML = upcomingEvents.length ? 
+        upcomingEvents.map(event => `
+            <div class="upcoming-event-item" onclick="calendar.gotoDate('${event.start.toISOString()}')">
+                <div class="event-dot" style="background-color: ${event.backgroundColor}"></div>
+                <div class="event-info">
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-date">${event.start.toLocaleDateString()}</div>
+                </div>
+            </div>
+        `).join('') :
+        '<p class="text-muted">Nenhum evento próximo</p>';
+}
+
+function showToast(message, type = 'info') {
+    // Implementar toast de notificação
+    alert(message);
+}
 </script>
 {% endblock %} 

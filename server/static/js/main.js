@@ -1,257 +1,125 @@
-// Utilitários
-const formatDate = (date) => {
-  return new Intl.DateTimeFormat("pt-BR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(date));
-};
+// Funções de utilidade
+function showLoading() {
+  const loading = document.createElement("div");
+  loading.className = "loading-overlay";
+  loading.innerHTML = '<div class="loading"></div>';
+  document.body.appendChild(loading);
+  setTimeout(() => loading.classList.add("show"), 0);
+}
 
-const formatDateShort = (date) => {
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-  }).format(new Date(date));
-};
+function hideLoading() {
+  const loading = document.querySelector(".loading-overlay");
+  if (loading) {
+    loading.classList.remove("show");
+    setTimeout(() => loading.remove(), 300);
+  }
+}
 
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-};
+function showToast(message, type = "success") {
+  const toast = document.createElement("div");
+  toast.className = `toast align-items-center text-white bg-${type} border-0 fade show`;
+  toast.setAttribute("role", "alert");
+  toast.setAttribute("aria-live", "assertive");
+  toast.setAttribute("aria-atomic", "true");
 
-// API Helpers
-const api = {
-  async get(endpoint) {
-    try {
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error("Erro na requisição");
-      return await response.json();
-    } catch (error) {
-      console.error("Erro na requisição GET:", error);
-      throw error;
-    }
-  },
+  toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
 
-  async post(endpoint, data) {
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error("Erro na requisição");
-      return await response.json();
-    } catch (error) {
-      console.error("Erro na requisição POST:", error);
-      throw error;
-    }
-  },
+  const container =
+    document.querySelector(".toast-container") ||
+    (() => {
+      const div = document.createElement("div");
+      div.className = "toast-container position-fixed top-0 end-0 p-3";
+      document.body.appendChild(div);
+      return div;
+    })();
 
-  async put(endpoint, data) {
-    try {
-      const response = await fetch(endpoint, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error("Erro na requisição");
-      return await response.json();
-    } catch (error) {
-      console.error("Erro na requisição PUT:", error);
-      throw error;
-    }
-  },
+  container.appendChild(toast);
+  new bootstrap.Toast(toast).show();
+}
 
-  async delete(endpoint) {
-    try {
-      const response = await fetch(endpoint, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Erro na requisição");
-      return await response.json();
-    } catch (error) {
-      console.error("Erro na requisição DELETE:", error);
-      throw error;
-    }
-  },
-};
+// Funções de tema
+function initTheme() {
+  const savedTheme = localStorage.getItem("theme") || "light";
+  document.documentElement.setAttribute("data-bs-theme", savedTheme);
 
-// Markdown Helper
-const md = {
-  parse(text) {
-    return marked.parse(text, {
-      breaks: true,
-      gfm: true,
-    });
-  },
+  const icon = document.querySelector("#theme-toggle i");
+  if (icon) {
+    icon.className = `fas fa-${savedTheme === "dark" ? "sun" : "moon"}`;
+  }
+}
 
-  sanitize(html) {
-    const temp = document.createElement("div");
-    temp.innerHTML = html;
-    return temp.textContent || temp.innerText;
-  },
-};
+// Funções de formulário
+function validateForm(form) {
+  const inputs = form.querySelectorAll(
+    "input[required], select[required], textarea[required]"
+  );
+  let isValid = true;
 
-// Storage Helper
-const storage = {
-  get(key) {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : null;
-    } catch (error) {
-      console.error("Erro ao ler do localStorage:", error);
-      return null;
-    }
-  },
-
-  set(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (error) {
-      console.error("Erro ao salvar no localStorage:", error);
-      return false;
-    }
-  },
-
-  remove(key) {
-    try {
-      localStorage.removeItem(key);
-      return true;
-    } catch (error) {
-      console.error("Erro ao remover do localStorage:", error);
-      return false;
-    }
-  },
-};
-
-// Theme Helper
-const theme = {
-  init() {
-    const savedTheme = storage.get("theme") || "light";
-    this.set(savedTheme);
-
-    // Observar mudanças no sistema
-    window.matchMedia("(prefers-color-scheme: dark)").addListener((e) => {
-      if (!storage.get("theme")) {
-        this.set(e.matches ? "dark" : "light");
-      }
-    });
-  },
-
-  set(mode) {
-    if (mode === "dark") {
-      document.documentElement.classList.add("dark");
+  inputs.forEach((input) => {
+    if (!input.value.trim()) {
+      input.classList.add("is-invalid");
+      isValid = false;
     } else {
-      document.documentElement.classList.remove("dark");
-    }
-    storage.set("theme", mode);
-  },
-
-  toggle() {
-    const current = storage.get("theme") || "light";
-    this.set(current === "light" ? "dark" : "light");
-  },
-};
-
-// Notification Helper
-const notify = {
-  permission: false,
-
-  async init() {
-    if ("Notification" in window) {
-      const permission = await Notification.requestPermission();
-      this.permission = permission === "granted";
-    }
-  },
-
-  async show(title, options = {}) {
-    if (!this.permission) return;
-
-    try {
-      const notification = new Notification(title, {
-        icon: "/static/img/favicon.png",
-        ...options,
-      });
-
-      notification.onclick = function () {
-        window.focus();
-        this.close();
-      };
-    } catch (error) {
-      console.error("Erro ao mostrar notificação:", error);
-    }
-  },
-};
-
-// Form Helper
-const form = {
-  serialize(formElement) {
-    const formData = new FormData(formElement);
-    const data = {};
-
-    for (let [key, value] of formData.entries()) {
-      if (data[key]) {
-        if (!Array.isArray(data[key])) {
-          data[key] = [data[key]];
-        }
-        data[key].push(value);
-      } else {
-        data[key] = value;
-      }
-    }
-
-    return data;
-  },
-
-  validate(formElement) {
-    const inputs = formElement.querySelectorAll("input, select, textarea");
-    let isValid = true;
-
-    inputs.forEach((input) => {
-      if (input.hasAttribute("required") && !input.value.trim()) {
-        input.classList.add("is-invalid");
-        isValid = false;
-      } else {
-        input.classList.remove("is-invalid");
-      }
-    });
-
-    return isValid;
-  },
-
-  clear(formElement) {
-    formElement.reset();
-    formElement.querySelectorAll(".is-invalid").forEach((input) => {
       input.classList.remove("is-invalid");
+    }
+  });
+
+  return isValid;
+}
+
+// Funções de API
+async function apiRequest(endpoint, options = {}) {
+  try {
+    showLoading();
+
+    const response = await fetch(endpoint, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
     });
-  },
-};
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("API Error:", error);
+    showToast(error.message || "Ocorreu um erro na requisição", "danger");
+    throw error;
+  } finally {
+    hideLoading();
+  }
+}
 
 // Inicialização
 document.addEventListener("DOMContentLoaded", () => {
-  theme.init();
-  notify.init();
-});
+  initTheme();
 
-// Exportar helpers
-window.app = {
-  api,
-  md,
-  storage,
-  theme,
-  notify,
-  form,
-  formatDate,
-  formatDateShort,
-  formatCurrency,
-};
+  // Inicializar todos os tooltips
+  const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  tooltips.forEach((tooltip) => new bootstrap.Tooltip(tooltip));
+
+  // Inicializar todos os popovers
+  const popovers = document.querySelectorAll('[data-bs-toggle="popover"]');
+  popovers.forEach((popover) => new bootstrap.Popover(popover));
+
+  // Adicionar validação a todos os formulários
+  const forms = document.querySelectorAll("form[data-validate]");
+  forms.forEach((form) => {
+    form.addEventListener("submit", (e) => {
+      if (!validateForm(form)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+  });
+});
