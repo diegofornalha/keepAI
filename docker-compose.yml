@@ -2,11 +2,15 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5001:5001"
     volumes:
       - .:/app
+      - ./server/static:/app/server/static
+      - ./server/templates:/app/server/templates
     environment:
       - FLASK_APP=server/app.py
       - FLASK_ENV=development
@@ -16,6 +20,7 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
       - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+    command: flask run --host=0.0.0.0 --port=5001 --reload
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s

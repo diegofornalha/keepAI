@@ -1,95 +1,183 @@
-{% extends "base.html" %}
+{% extends "layout/base.html" %}
 
-{% block title %}Chat & Notas{% endblock %}
-
-{% block page_title %}Chat & Notas{% endblock %}
+{% block title %}Início - KeepAI{% endblock %}
 
 {% block content %}
-<div class="container-fluid h-100">
-    <div class="row h-100">
-        <!-- Lista de Chats -->
-        <div class="col-md-3 chat-list">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Conversas</h5>
-                <button class="btn btn-primary btn-sm" onclick="newChat()">
-                    <i class="bi bi-plus-lg"></i> Nova Conversa
-                </button>
-            </div>
-            <div class="chat-items" id="chatList">
-                <!-- Lista de chats será preenchida via JavaScript -->
-            </div>
-        </div>
-
-        <!-- Área do Chat -->
-        <div class="col-md-6 chat-area">
-            <div class="chat-messages" id="chatMessages">
-                <!-- Mensagens serão preenchidas via JavaScript -->
-            </div>
-            <div class="chat-input">
-                <form id="messageForm" class="d-flex gap-2">
-                    <div class="flex-grow-1">
-                        <textarea 
-                            class="form-control" 
-                            id="messageInput" 
-                            rows="2" 
-                            placeholder="Digite sua mensagem..."
-                        ></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-send"></i>
-                    </button>
-                </form>
+<div class="row">
+    <!-- Resumo das Notas -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-sticky-note text-primary"></i> Notas Recentes
+                </h5>
+                <div class="list-group list-group-flush">
+                    {% if recent_notes %}
+                        {% for note in recent_notes %}
+                            <a href="{{ url_for('notes', note_id=note.id) }}" class="list-group-item list-group-item-action">
+                                {{ note.title }}
+                                <small class="text-muted d-block">{{ note.created_at|datetime }}</small>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Nenhuma nota recente.</p>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('notes') }}" class="btn btn-outline-primary mt-3">Ver Todas</a>
             </div>
         </div>
+    </div>
 
-        <!-- Área de Notas Rápidas -->
-        <div class="col-md-3 quick-notes">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Notas Rápidas</h5>
-                <button class="btn btn-outline-primary btn-sm" onclick="newQuickNote()">
-                    <i class="bi bi-plus-lg"></i> Nova Nota
-                </button>
+    <!-- Tarefas Pendentes -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-tasks text-success"></i> Tarefas Pendentes
+                </h5>
+                <div class="list-group list-group-flush">
+                    {% if pending_tasks %}
+                        {% for task in pending_tasks %}
+                            <div class="list-group-item">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="task-{{ task.id }}">
+                                    <label class="form-check-label" for="task-{{ task.id }}">{{ task.title }}</label>
+                                </div>
+                                <small class="text-muted">Vence em: {{ task.due_date|datetime }}</small>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Nenhuma tarefa pendente.</p>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('tasks') }}" class="btn btn-outline-success mt-3">Ver Todas</a>
             </div>
-            <div class="notes-list" id="quickNotesList">
-                <!-- Notas rápidas serão preenchidas via JavaScript -->
+        </div>
+    </div>
+
+    <!-- Próximos Eventos -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-calendar text-warning"></i> Próximos Eventos
+                </h5>
+                <div class="list-group list-group-flush">
+                    {% if upcoming_events %}
+                        {% for event in upcoming_events %}
+                            <a href="{{ url_for('calendar') }}" class="list-group-item list-group-item-action">
+                                {{ event.title }}
+                                <small class="text-muted d-block">{{ event.start_time|datetime }}</small>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Nenhum evento próximo.</p>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('calendar') }}" class="btn btn-outline-warning mt-3">Ver Todos</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assistente IA -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title">
+            <i class="fas fa-robot text-info"></i> Assistente IA
+        </h5>
+        <div class="chat-container" id="chat-container">
+            <div class="messages" id="messages">
+                <!-- Mensagens serão adicionadas aqui -->
+            </div>
+            <div class="input-group">
+                <input type="text" class="form-control" id="user-input" placeholder="Digite sua mensagem...">
+                <button class="btn btn-primary" type="button" id="send-message">
+                    <i class="fas fa-paper-plane"></i> Enviar
+                </button>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_css %}
+<style>
+.chat-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.messages {
+    padding: 1rem;
+}
+
+.message {
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+}
+
+.user-message {
+    background-color: var(--bs-primary-bg-subtle);
+    margin-left: 20%;
+    border-top-right-radius: 0;
+}
+
+.assistant-message {
+    background-color: var(--bs-secondary-bg-subtle);
+    margin-right: 20%;
+    border-top-left-radius: 0;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    // Funções para gerenciamento de chat
-    function newChat() {
-        // Implementar criação de novo chat
+document.addEventListener('DOMContentLoaded', function() {
+    const messagesContainer = document.getElementById('messages');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-message');
+
+    function addMessage(content, isUser = true) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user-message' : 'assistant-message'}`;
+        messageDiv.textContent = content;
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    function newQuickNote() {
-        // Implementar criação de nova nota rápida
-    }
+    function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
 
-    // Inicialização da página
-    document.addEventListener('DOMContentLoaded', () => {
-        const messageForm = document.getElementById('messageForm');
-        
-        messageForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const messageInput = document.getElementById('messageInput');
-            const message = messageInput.value.trim();
-            
-            if (message) {
-                showLoading();
-                try {
-                    // Implementar envio de mensagem para o backend
-                    messageInput.value = '';
-                } catch (error) {
-                    showToast('Erro ao enviar mensagem', 'danger');
-                } finally {
-                    hideLoading();
-                }
-            }
+        addMessage(message, true);
+        userInput.value = '';
+
+        // Enviar mensagem para o backend
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            addMessage(data.response, false);
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            addMessage('Desculpe, ocorreu um erro ao processar sua mensagem.', false);
         });
+    }
+
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
     });
+});
 </script>
 {% endblock %} 

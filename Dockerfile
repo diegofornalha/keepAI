@@ -27,8 +27,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar o resto do código
 COPY . .
 
+# Criar diretórios necessários
+RUN mkdir -p server/static server/templates
+
 # Expor a porta que o Flask vai usar
 EXPOSE 5001
 
-# Comando para rodar o servidor
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0"]
+# Comando para rodar o servidor em modo de desenvolvimento
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5001", "--reload"]
