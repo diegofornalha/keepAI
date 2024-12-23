@@ -1,7 +1,8 @@
 from typing import Dict, Any
 from langchain.agents import AgentType, AgentExecutor, initialize_agent
 from langchain.tools import Tool
-from langchain_community.chat_models import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI
+from pydantic.v1 import SecretStr
 from server.config.settings import settings
 from server.modules.notes_manager import NotesManager
 
@@ -11,9 +12,14 @@ class KeepAIAgent:
         self.notes_manager = NotesManager()
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-pro",
-            google_api_key=settings.GEMINI_API_KEY,
+            google_api_key=SecretStr(settings.GEMINI_API_KEY)
+            if settings.GEMINI_API_KEY
+            else None,
             temperature=0.7,
             convert_system_message_to_human=True,
+            client_options={},
+            transport="rest",
+            client=None,
         )
 
     def get_tools(self) -> list[Tool]:
