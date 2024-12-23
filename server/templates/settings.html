@@ -1,0 +1,345 @@
+{% extends "layout/base.html" %}
+
+{% block title %}KeepAI - Configurações{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5">
+                <i class="fas fa-cog text-secondary"></i> Configurações
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Menu de Navegação -->
+            <div class="list-group mb-4">
+                <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                    <i class="fas fa-user"></i> Perfil
+                </a>
+                <a href="#preferences" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="fas fa-sliders-h"></i> Preferências
+                </a>
+                <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="fas fa-bell"></i> Notificações
+                </a>
+                <a href="#integrations" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="fas fa-plug"></i> Integrações
+                </a>
+                <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="fas fa-shield-alt"></i> Segurança
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <!-- Conteúdo das Abas -->
+            <div class="tab-content">
+                <!-- Perfil -->
+                <div class="tab-pane fade show active" id="profile">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Informações do Perfil</h5>
+                            <form id="profileForm">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="name" class="form-label">Nome</label>
+                                        <input type="text" class="form-control" id="name" value="{{ current_user.name }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" value="{{ current_user.email }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="bio" class="form-label">Biografia</label>
+                                    <textarea class="form-control" id="bio" rows="3">{{ current_user.bio }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="timezone" class="form-label">Fuso Horário</label>
+                                    <select class="form-select" id="timezone">
+                                        <option value="America/Sao_Paulo" selected>América/São Paulo</option>
+                                        <option value="America/New_York">América/Nova York</option>
+                                        <option value="Europe/London">Europa/Londres</option>
+                                        <option value="Asia/Tokyo">Ásia/Tóquio</option>
+                                    </select>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="saveProfile()">
+                                    Salvar Alterações
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferências -->
+                <div class="tab-pane fade" id="preferences">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Preferências do Sistema</h5>
+                            <form id="preferencesForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Tema</label>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="theme" id="lightTheme" checked>
+                                        <label class="btn btn-outline-primary" for="lightTheme">
+                                            <i class="fas fa-sun"></i> Claro
+                                        </label>
+                                        <input type="radio" class="btn-check" name="theme" id="darkTheme">
+                                        <label class="btn btn-outline-primary" for="darkTheme">
+                                            <i class="fas fa-moon"></i> Escuro
+                                        </label>
+                                        <input type="radio" class="btn-check" name="theme" id="systemTheme">
+                                        <label class="btn btn-outline-primary" for="systemTheme">
+                                            <i class="fas fa-desktop"></i> Sistema
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Idioma</label>
+                                    <select class="form-select" id="language">
+                                        <option value="pt-BR" selected>Português (Brasil)</option>
+                                        <option value="en-US">English (US)</option>
+                                        <option value="es">Español</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Formato de Data</label>
+                                    <select class="form-select" id="dateFormat">
+                                        <option value="DD/MM/YYYY" selected>DD/MM/YYYY</option>
+                                        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                                        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                                    </select>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="savePreferences()">
+                                    Salvar Preferências
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notificações -->
+                <div class="tab-pane fade" id="notifications">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Configurações de Notificações</h5>
+                            <form id="notificationsForm">
+                                <div class="mb-4">
+                                    <h6>Notificações por Email</h6>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="emailTasks" checked>
+                                        <label class="form-check-label" for="emailTasks">
+                                            Tarefas próximas do vencimento
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="emailEvents" checked>
+                                        <label class="form-check-label" for="emailEvents">
+                                            Lembretes de eventos
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="emailUpdates">
+                                        <label class="form-check-label" for="emailUpdates">
+                                            Atualizações do sistema
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <h6>Notificações no Navegador</h6>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="browserTasks" checked>
+                                        <label class="form-check-label" for="browserTasks">
+                                            Tarefas próximas do vencimento
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="browserEvents" checked>
+                                        <label class="form-check-label" for="browserEvents">
+                                            Lembretes de eventos
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="saveNotifications()">
+                                    Salvar Notificações
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Integrações -->
+                <div class="tab-pane fade" id="integrations">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Integrações com Outros Serviços</h5>
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">Google Calendar</h6>
+                                            <p class="mb-0 text-muted">Sincronize seus eventos com o Google Calendar</p>
+                                        </div>
+                                        <button class="btn btn-primary" onclick="connectGoogle()">Conectar</button>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">Microsoft Teams</h6>
+                                            <p class="mb-0 text-muted">Integre suas reuniões com o Microsoft Teams</p>
+                                        </div>
+                                        <button class="btn btn-primary" onclick="connectTeams()">Conectar</button>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">Slack</h6>
+                                            <p class="mb-0 text-muted">Receba notificações no Slack</p>
+                                        </div>
+                                        <button class="btn btn-primary" onclick="connectSlack()">Conectar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Segurança -->
+                <div class="tab-pane fade" id="security">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Configurações de Segurança</h5>
+                            <form id="securityForm">
+                                <div class="mb-4">
+                                    <h6>Alterar Senha</h6>
+                                    <div class="mb-3">
+                                        <label for="currentPassword" class="form-label">Senha Atual</label>
+                                        <input type="password" class="form-control" id="currentPassword">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="newPassword" class="form-label">Nova Senha</label>
+                                        <input type="password" class="form-control" id="newPassword">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="confirmPassword" class="form-label">Confirmar Nova Senha</label>
+                                        <input type="password" class="form-control" id="confirmPassword">
+                                    </div>
+                                    <button type="button" class="btn btn-primary" onclick="changePassword()">
+                                        Alterar Senha
+                                    </button>
+                                </div>
+                                <div class="mb-4">
+                                    <h6>Autenticação em Duas Etapas</h6>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="twoFactor">
+                                        <label class="form-check-label" for="twoFactor">
+                                            Ativar autenticação em duas etapas
+                                        </label>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary" onclick="configureTwoFactor()">
+                                        Configurar
+                                    </button>
+                                </div>
+                                <div class="mb-4">
+                                    <h6>Sessões Ativas</h6>
+                                    <div class="list-group mb-3">
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1">Chrome - Windows</h6>
+                                                    <small class="text-muted">Última atividade: há 2 minutos</small>
+                                                </div>
+                                                <button class="btn btn-sm btn-danger" onclick="endSession('session1')">
+                                                    Encerrar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1">Safari - iPhone</h6>
+                                                    <small class="text-muted">Última atividade: há 1 hora</small>
+                                                </div>
+                                                <button class="btn btn-sm btn-danger" onclick="endSession('session2')">
+                                                    Encerrar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-danger" onclick="endAllSessions()">
+                                        Encerrar Todas as Sessões
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Funções de Perfil
+function saveProfile() {
+    // Implementar lógica de salvamento do perfil
+}
+
+// Funções de Preferências
+function savePreferences() {
+    // Implementar lógica de salvamento das preferências
+}
+
+// Funções de Notificações
+function saveNotifications() {
+    // Implementar lógica de salvamento das notificações
+}
+
+// Funções de Integrações
+function connectGoogle() {
+    // Implementar lógica de conexão com Google
+}
+
+function connectTeams() {
+    // Implementar lógica de conexão com Teams
+}
+
+function connectSlack() {
+    // Implementar lógica de conexão com Slack
+}
+
+// Funções de Segurança
+function changePassword() {
+    // Implementar lógica de alteração de senha
+}
+
+function configureTwoFactor() {
+    // Implementar lógica de configuração 2FA
+}
+
+function endSession(sessionId) {
+    // Implementar lógica de encerramento de sessão
+}
+
+function endAllSessions() {
+    // Implementar lógica de encerramento de todas as sessões
+}
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar configurações salvas
+    loadSavedSettings();
+});
+
+function loadSavedSettings() {
+    // Implementar carregamento das configurações salvas
+}
+</script>
+{% endblock %} 

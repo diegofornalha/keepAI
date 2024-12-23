@@ -5,13 +5,17 @@ load_dotenv()
 
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-key-12345")
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///app.db")
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Flask
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 
-    # Configurações do Clerk
+    # Clerk
     CLERK_API_KEY = os.getenv("CLERK_API_KEY")
     CLERK_FRONTEND_API = os.getenv("CLERK_FRONTEND_API")
+    CLERK_JWT_KEY = os.getenv("CLERK_JWT_KEY")
 
-    # Configurações do OpenAI
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    # Supabase
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+    # Google Gemini
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")

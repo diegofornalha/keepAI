@@ -7,8 +7,13 @@ setup(
     install_requires=[
         "flask",
         "flask-cors",
-        "flask-sqlalchemy",
         "python-dotenv",
+        "supabase",
+        "python-jose[cryptography]",  # Para JWT
+        "requests",  # Para chamadas HTTP
+        "langchain",  # Para funcionalidades de IA
+        "google-generativeai",  # Para integração com Gemini
+        "pyjwt",  # Para validação de tokens JWT do Clerk
         # Adicione outras dependências aqui
     ],
 )

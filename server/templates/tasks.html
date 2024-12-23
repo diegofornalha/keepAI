@@ -1,73 +1,122 @@
 {% extends "layout/base.html" %}
 
-{% block title %}Tarefas{% endblock %}
+{% block title %}KeepAI - Tarefas{% endblock %}
 
 {% block content %}
-<div class="container-fluid h-100">
-    <div class="row h-100">
-        <!-- Sidebar de Tarefas -->
-        <div class="col-md-3 tasks-sidebar">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Listas</h5>
-                <button class="btn btn-primary btn-sm" onclick="createNewList()">
-                    <i class="fas fa-plus"></i> Nova Lista
-                </button>
-            </div>
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5">
+                <i class="fas fa-tasks text-success"></i> Minhas Tarefas
+            </h1>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                <i class="fas fa-plus"></i> Nova Tarefa
+            </button>
+        </div>
+    </div>
 
-            <!-- Listas de Tarefas -->
-            <div class="task-lists" id="taskLists">
-                <div class="list-group">
-                    <a href="#" class="list-group-item list-group-item-action active" onclick="filterTasks('all')">
-                        <i class="fas fa-tasks"></i> Todas as Tarefas
-                        <span class="badge bg-primary rounded-pill float-end" id="allTasksCount">0</span>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" onclick="filterTasks('today')">
-                        <i class="fas fa-calendar-day"></i> Hoje
-                        <span class="badge bg-primary rounded-pill float-end" id="todayTasksCount">0</span>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" onclick="filterTasks('week')">
-                        <i class="fas fa-calendar-week"></i> Esta Semana
-                        <span class="badge bg-primary rounded-pill float-end" id="weekTasksCount">0</span>
-                    </a>
-                    <!-- Listas personalizadas serão adicionadas aqui -->
-                </div>
+    <!-- Barra de Pesquisa e Filtros -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text bg-white">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="searchTasks" placeholder="Pesquisar tarefas...">
             </div>
         </div>
+        <div class="col-md-3">
+            <select class="form-select" id="filterStatus">
+                <option value="all">Todos os Status</option>
+                <option value="pending">Pendentes</option>
+                <option value="completed">Concluídas</option>
+                <option value="archived">Arquivadas</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="filterPriority">
+                <option value="all">Todas as Prioridades</option>
+                <option value="high">Alta</option>
+                <option value="medium">Média</option>
+                <option value="low">Baixa</option>
+            </select>
+        </div>
+    </div>
 
-        <!-- Lista de Tarefas -->
-        <div class="col-md-9 tasks-main">
-            <div class="tasks-header mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h4 id="currentListTitle">Todas as Tarefas</h4>
-                    <button class="btn btn-primary" onclick="showNewTaskModal()">
-                        <i class="fas fa-plus"></i> Nova Tarefa
-                    </button>
-                </div>
-                <div class="task-filters mt-2">
-                    <div class="btn-group">
-                        <button class="btn btn-outline-secondary active" onclick="sortTasks('date')">
-                            <i class="fas fa-calendar"></i> Data
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="sortTasks('priority')">
-                            <i class="fas fa-flag"></i> Prioridade
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="sortTasks('alphabetical')">
-                            <i class="fas fa-sort-alpha-down"></i> Alfabético
+    <!-- Lista de Tarefas -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    {% if tasks %}
+                    <div class="list-group list-group-flush">
+                        {% for task in tasks %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="form-check flex-grow-1">
+                                <input class="form-check-input" type="checkbox" id="task-{{ task.id }}"
+                                    {% if task.completed %}checked{% endif %}
+                                    onchange="toggleTask('{{ task.id }}')">
+                                <label class="form-check-label {% if task.completed %}text-decoration-line-through{% endif %}" 
+                                    for="task-{{ task.id }}">
+                                    {{ task.title }}
+                                </label>
+                                {% if task.due_date %}
+                                <small class="text-muted ms-2">
+                                    <i class="fas fa-calendar"></i> {{ task.due_date|datetime }}
+                                </small>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge {% if task.priority == 'high' %}bg-danger{% elif task.priority == 'medium' %}bg-warning{% else %}bg-info{% endif %} me-2">
+                                    {{ task.priority }}
+                                </span>
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-muted" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="editTask('{{ task.id }}')">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="archiveTask('{{ task.id }}')">
+                                                <i class="fas fa-archive"></i> Arquivar
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#" onclick="deleteTask('{{ task.id }}')">
+                                                <i class="fas fa-trash"></i> Excluir
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-tasks fa-4x text-muted mb-3"></i>
+                        <h3>Nenhuma tarefa encontrada</h3>
+                        <p class="text-muted">Comece criando sua primeira tarefa!</p>
+                        <button class="btn btn-success mt-3" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                            <i class="fas fa-plus"></i> Criar Tarefa
                         </button>
                     </div>
+                    {% endif %}
                 </div>
-            </div>
-
-            <!-- Lista de Tarefas -->
-            <div class="tasks-list" id="tasksList">
-                <!-- Tarefas serão preenchidas via JavaScript -->
             </div>
         </div>
     </div>
 </div>
 
 <!-- Modal Nova Tarefa -->
-<div class="modal fade" id="taskModal" tabindex="-1">
+<div class="modal fade" id="newTaskModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -75,398 +124,73 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="taskForm">
+                <form id="newTaskForm">
                     <div class="mb-3">
-                        <label class="form-label">Título</label>
+                        <label for="taskTitle" class="form-label">Título</label>
                         <input type="text" class="form-control" id="taskTitle" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Descrição</label>
+                        <label for="taskDescription" class="form-label">Descrição</label>
                         <textarea class="form-control" id="taskDescription" rows="3"></textarea>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Data de Vencimento</label>
-                            <input type="date" class="form-control" id="taskDueDate">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Prioridade</label>
-                            <select class="form-select" id="taskPriority">
-                                <option value="low">Baixa</option>
-                                <option value="medium">Média</option>
-                                <option value="high">Alta</option>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label for="taskDueDate" class="form-label">Data de Vencimento</label>
+                        <input type="datetime-local" class="form-control" id="taskDueDate">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Lista</label>
-                        <select class="form-select" id="taskList">
-                            <option value="default">Lista Padrão</option>
-                            <!-- Outras listas serão adicionadas dinamicamente -->
+                        <label for="taskPriority" class="form-label">Prioridade</label>
+                        <select class="form-select" id="taskPriority" required>
+                            <option value="low">Baixa</option>
+                            <option value="medium">Média</option>
+                            <option value="high">Alta</option>
                         </select>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="saveTask()">Salvar</button>
+                <button type="button" class="btn btn-success" onclick="saveTask()">Salvar</button>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Modal Nova Lista -->
-<div class="modal fade" id="listModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Nova Lista</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="listForm">
-                    <div class="mb-3">
-                        <label class="form-label">Nome da Lista</label>
-                        <input type="text" class="form-control" id="listName" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Cor</label>
-                        <select class="form-select" id="listColor">
-                            <option value="#2563eb">Azul</option>
-                            <option value="#16a34a">Verde</option>
-                            <option value="#dc2626">Vermelho</option>
-                            <option value="#ca8a04">Amarelo</option>
-                            <option value="#9333ea">Roxo</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="saveList()">Criar Lista</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.tasks-sidebar {
-    border-right: 1px solid var(--bs-border-color);
-    height: calc(100vh - 150px);
-    overflow-y: auto;
-}
-
-.tasks-main {
-    height: calc(100vh - 150px);
-    overflow-y: auto;
-}
-
-.task-item {
-    border-bottom: 1px solid var(--bs-border-color);
-    padding: 1rem;
-}
-
-.task-item:hover {
-    background-color: var(--bs-secondary-bg-subtle);
-}
-
-.task-item.completed {
-    opacity: 0.7;
-}
-
-.task-item.completed .task-title {
-    text-decoration: line-through;
-}
-
-.priority-high {
-    color: var(--bs-danger);
-}
-
-.priority-medium {
-    color: var(--bs-warning);
-}
-
-.priority-low {
-    color: var(--bs-success);
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let currentFilter = 'all';
-let currentSort = 'date';
-let currentList = null;
-
-function showNewTaskModal() {
-    const modal = new bootstrap.Modal(document.getElementById('taskModal'));
-    modal.show();
+// Funções para manipulação de tarefas
+function saveTask() {
+    // Implementar lógica de salvamento
 }
 
-function createNewList() {
-    const modal = new bootstrap.Modal(document.getElementById('listModal'));
-    modal.show();
+function editTask(taskId) {
+    // Implementar lógica de edição
 }
 
-async function saveTask() {
-    const taskData = {
-        title: document.getElementById('taskTitle').value,
-        description: document.getElementById('taskDescription').value,
-        due_date: document.getElementById('taskDueDate').value,
-        priority: document.getElementById('taskPriority').value,
-        list_id: document.getElementById('taskList').value
-    };
-
-    if (!taskData.title) {
-        showToast('O título da tarefa é obrigatório', 'warning');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/v1/tasks', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(taskData)
-        });
-
-        if (!response.ok) throw new Error('Erro ao salvar tarefa');
-
-        const modal = bootstrap.Modal.getInstance(document.getElementById('taskModal'));
-        modal.hide();
-        showToast('Tarefa criada com sucesso!', 'success');
-        loadTasks();
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao salvar tarefa', 'danger');
-    }
+function toggleTask(taskId) {
+    // Implementar lógica de toggle
 }
 
-async function saveList() {
-    const listData = {
-        name: document.getElementById('listName').value,
-        color: document.getElementById('listColor').value
-    };
-
-    if (!listData.name) {
-        showToast('O nome da lista é obrigatório', 'warning');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/v1/task-lists', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(listData)
-        });
-
-        if (!response.ok) throw new Error('Erro ao criar lista');
-
-        const modal = bootstrap.Modal.getInstance(document.getElementById('listModal'));
-        modal.hide();
-        showToast('Lista criada com sucesso!', 'success');
-        loadLists();
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao criar lista', 'danger');
-    }
+function archiveTask(taskId) {
+    // Implementar lógica de arquivamento
 }
 
-function filterTasks(filter) {
-    currentFilter = filter;
-    document.querySelectorAll('.task-lists .list-group-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    document.querySelector(`[onclick="filterTasks('${filter}')"]`).classList.add('active');
-    loadTasks();
+function deleteTask(taskId) {
+    // Implementar lógica de exclusão
 }
 
-function sortTasks(sort) {
-    currentSort = sort;
-    document.querySelectorAll('.task-filters .btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.querySelector(`[onclick="sortTasks('${sort}')"]`).classList.add('active');
-    loadTasks();
-}
+// Pesquisa em tempo real
+document.getElementById('searchTasks').addEventListener('input', function(e) {
+    // Implementar lógica de pesquisa
+});
 
-async function loadTasks() {
-    try {
-        let url = '/api/v1/tasks';
-        if (currentList) {
-            url += `?list_id=${currentList}`;
-        } else if (currentFilter !== 'all') {
-            url += `?filter=${currentFilter}`;
-        }
-        if (currentSort !== 'date') {
-            url += `${url.includes('?') ? '&' : '?'}sort=${currentSort}`;
-        }
+// Filtros
+document.getElementById('filterStatus').addEventListener('change', function(e) {
+    // Implementar lógica de filtro por status
+});
 
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Erro ao carregar tarefas');
-        
-        const tasks = await response.json();
-        const tasksList = document.getElementById('tasksList');
-        tasksList.innerHTML = '';
-        
-        tasks.forEach(task => {
-            const div = document.createElement('div');
-            div.className = `task-item ${task.completed ? 'completed' : ''}`;
-            
-            const priorityClass = `priority-${task.priority}`;
-            const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'Sem data';
-            
-            div.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" 
-                               id="task-${task.id}" 
-                               ${task.completed ? 'checked' : ''}
-                               onchange="toggleTask(${task.id}, this.checked)">
-                        <label class="form-check-label task-title" for="task-${task.id}">
-                            ${task.title}
-                        </label>
-                    </div>
-                    <div class="ms-auto">
-                        <span class="badge ${priorityClass}">
-                            <i class="fas fa-flag"></i> ${task.priority}
-                        </span>
-                        <small class="text-muted ms-2">
-                            <i class="fas fa-calendar"></i> ${dueDate}
-                        </small>
-                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteTask(${task.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                ${task.description ? `<small class="text-muted d-block mt-1">${task.description}</small>` : ''}
-            `;
-            
-            tasksList.appendChild(div);
-        });
-
-        updateTaskCounts();
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao carregar tarefas', 'danger');
-    }
-}
-
-async function loadLists() {
-    try {
-        const response = await fetch('/api/v1/task-lists');
-        if (!response.ok) throw new Error('Erro ao carregar listas');
-        
-        const lists = await response.json();
-        const taskList = document.getElementById('taskList');
-        const customLists = document.getElementById('taskLists');
-        
-        // Atualizar select do modal
-        let options = '<option value="default">Lista Padrão</option>';
-        lists.forEach(list => {
-            options += `<option value="${list.id}">${list.name}</option>`;
-        });
-        taskList.innerHTML = options;
-        
-        // Atualizar listas na sidebar
-        const defaultLists = customLists.querySelector('.list-group').innerHTML;
-        customLists.querySelector('.list-group').innerHTML = defaultLists;
-        
-        lists.forEach(list => {
-            const a = document.createElement('a');
-            a.href = '#';
-            a.className = 'list-group-item list-group-item-action';
-            a.onclick = () => selectList(list.id);
-            a.innerHTML = `
-                <i class="fas fa-list" style="color: ${list.color}"></i> ${list.name}
-                <span class="badge bg-primary rounded-pill float-end" id="list-${list.id}-count">0</span>
-            `;
-            customLists.querySelector('.list-group').appendChild(a);
-        });
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao carregar listas', 'danger');
-    }
-}
-
-async function toggleTask(taskId, completed) {
-    try {
-        const response = await fetch(`/api/v1/tasks/${taskId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ completed })
-        });
-
-        if (!response.ok) throw new Error('Erro ao atualizar tarefa');
-        loadTasks();
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao atualizar tarefa', 'danger');
-    }
-}
-
-async function deleteTask(taskId) {
-    if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
-
-    try {
-        const response = await fetch(`/api/v1/tasks/${taskId}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) throw new Error('Erro ao excluir tarefa');
-        showToast('Tarefa excluída com sucesso!', 'success');
-        loadTasks();
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao excluir tarefa', 'danger');
-    }
-}
-
-function selectList(listId) {
-    currentList = listId;
-    document.querySelectorAll('.task-lists .list-group-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    document.querySelector(`[onclick="selectList(${listId})"]`).classList.add('active');
-    loadTasks();
-}
-
-async function updateTaskCounts() {
-    try {
-        const response = await fetch('/api/v1/tasks/counts');
-        if (!response.ok) throw new Error('Erro ao carregar contagens');
-        
-        const counts = await response.json();
-        document.getElementById('allTasksCount').textContent = counts.all || 0;
-        document.getElementById('todayTasksCount').textContent = counts.today || 0;
-        document.getElementById('weekTasksCount').textContent = counts.week || 0;
-        
-        // Atualizar contagens das listas personalizadas
-        Object.entries(counts.lists || {}).forEach(([listId, count]) => {
-            const element = document.getElementById(`list-${listId}-count`);
-            if (element) element.textContent = count;
-        });
-    } catch (error) {
-        console.error('Erro:', error);
-    }
-}
-
-function showToast(message, type = 'info') {
-    // Implementar toast de notificação
-    alert(message);
-}
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', () => {
-    loadLists();
-    loadTasks();
+document.getElementById('filterPriority').addEventListener('change', function(e) {
+    // Implementar lógica de filtro por prioridade
 });
 </script>
 {% endblock %} 

@@ -1,25 +1,23 @@
 from flask import Flask
 from flask_cors import CORS
+from server.routes import register_routes
 from server.config import Config
-from server.models import db
 
 
-def create_app(config_class=Config):
+def create_app(config_class: type = Config) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Inicializa extensões
+    # Inicializar extensões
     CORS(app)
-    db.init_app(app)
 
-    # Importa e registra as rotas aqui para evitar importação circular
-    from server.routes import register_routes
-
+    # Registrar blueprints
     register_routes(app)
 
     return app
 
 
+# Criar instância do app
 app = create_app()
 
 if __name__ == "__main__":

@@ -1,19 +1,19 @@
-from typing import Dict, Any
-
-
 class User:
-    def __init__(self, data: Dict[str, Any]):
-        self.id = data.get("id")
-        self.email = data.get("email")
-        self.name = data.get("name")
-        self.created_at = data.get("created_at")
-        self.updated_at = data.get("updated_at")
+    def __init__(self, id: int, name: str, email: str) -> None:
+        self.id = id
+        self.name = name
+        self.email = email
+        self.bio = ""
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "id": self.id,
-            "email": self.email,
-            "name": self.name,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-        }
+    @staticmethod
+    def from_clerk_user(clerk_user: dict) -> "User":
+        """
+        Cria uma instância de User a partir dos dados do Clerk
+        """
+        return User(
+            id=clerk_user["id"],
+            name=clerk_user.get("first_name", "")
+            + " "
+            + clerk_user.get("last_name", ""),
+            email=clerk_user.get("email_addresses", [{}])[0].get("email_address", ""),
+        )

@@ -1,32 +1,23 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-bs-theme="light">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}KeepAI{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-    
     <!-- Clerk -->
     <script src="https://cdn.clerk.dev/v1/clerk.js"></script>
-    <script>
-        window.Clerk.load({
-            publishableKey: '{{ config["CLERK_PUBLISHABLE_KEY"] }}'
-        });
-    </script>
-    
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="bg-light">
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <i class="fas fa-brain"></i> KeepAI
@@ -36,11 +27,6 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">
-                            <i class="fas fa-home"></i> Início
-                        </a>
-                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.notes') }}">
                             <i class="fas fa-sticky-note"></i> Notas
@@ -57,89 +43,51 @@
                         </a>
                     </li>
                 </ul>
-                <div class="d-flex align-items-center">
-                    <!-- Theme Toggle -->
-                    <button class="btn btn-link" id="theme-toggle">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    <!-- User Menu -->
+                <div class="navbar-nav">
                     <div id="user-button"></div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="container my-4">
+    <!-- Flash Messages -->
+    <div class="container mt-3">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
                         {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
+    </div>
 
+    <!-- Main Content -->
+    <main class="container my-4">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="footer mt-auto py-3 bg-light">
+    <footer class="footer mt-auto py-3 bg-dark text-light">
         <div class="container text-center">
-            <span class="text-muted">© 2024 KeepAI. Todos os direitos reservados.</span>
+            <span>© 2024 KeepAI. Todos os direitos reservados.</span>
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
+    <!-- Clerk Initialization -->
+    <script>
+        window.Clerk.load({
+            publishableKey: '{{ config.CLERK_PUBLISHABLE_KEY }}'
+        }).then(() => {
+            const userButton = window.Clerk.mountUserButton(document.getElementById('user-button'));
+        });
+    </script>
     {% block extra_js %}{% endblock %}
-
-    <!-- Theme Toggle Script -->
-    <script>
-        document.getElementById('theme-toggle').addEventListener('click', function() {
-            const html = document.documentElement;
-            const icon = this.querySelector('i');
-            
-            if (html.getAttribute('data-bs-theme') === 'dark') {
-                html.setAttribute('data-bs-theme', 'light');
-                icon.classList.replace('fa-sun', 'fa-moon');
-                localStorage.setItem('theme', 'light');
-            } else {
-                html.setAttribute('data-bs-theme', 'dark');
-                icon.classList.replace('fa-moon', 'fa-sun');
-                localStorage.setItem('theme', 'dark');
-            }
-        });
-
-        // Carregar tema salvo
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-bs-theme', savedTheme);
-        const icon = document.querySelector('#theme-toggle i');
-        icon.classList.replace('fa-moon', savedTheme === 'dark' ? 'fa-sun' : 'fa-moon');
-    </script>
-
-    <!-- Clerk Script -->
-    <script>
-        window.addEventListener('load', async () => {
-            // Inicializar o botão de usuário do Clerk
-            const userButton = document.getElementById('user-button');
-            window.Clerk.mountUserButton(userButton);
-
-            // Verificar autenticação
-            const user = await window.Clerk.user;
-            if (!user) {
-                // Se não estiver autenticado e não estiver na página de login
-                if (!window.location.pathname.includes('/login')) {
-                    window.location.href = '/login';
-                }
-            }
-        });
-    </script>
 </body>
 </html> 

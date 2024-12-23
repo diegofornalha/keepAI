@@ -10,14 +10,21 @@ services:
       - ./server/static:/app/server/static
       - ./server/templates:/app/server/templates
     environment:
-      - FLASK_APP=server/app.py
+      - FLASK_APP=server.app:app
       - FLASK_ENV=development
       - FLASK_DEBUG=1
       - FLASK_RUN_PORT=5001
       - FLASK_RUN_HOST=0.0.0.0
+      - SECRET_KEY=${SECRET_KEY}
+      # Supabase
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
+      # Clerk
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
       - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - CLERK_WEBHOOK_SECRET=${CLERK_WEBHOOK_SECRET}
+      # Google Gemini
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     command: flask run --host=0.0.0.0 --port=5001 --reload
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]

@@ -1,305 +1,174 @@
 {% extends "layout/base.html" %}
 
-{% block title %}Notas{% endblock %}
+{% block title %}KeepAI - Notas{% endblock %}
 
 {% block content %}
-<div class="container-fluid h-100">
-    <div class="row h-100">
-        <!-- Sidebar de Notas -->
-        <div class="col-md-3 notes-sidebar">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Minhas Notas</h5>
-                <button class="btn btn-primary btn-sm" onclick="createNewNote()">
-                    <i class="fas fa-plus"></i> Nova Nota
-                </button>
-            </div>
-            
-            <!-- Barra de Pesquisa -->
-            <div class="search-bar mb-3">
-                <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="fas fa-search"></i>
-                    </span>
-                    <input type="text" class="form-control" placeholder="Pesquisar notas..." id="searchNotes">
-                </div>
-            </div>
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5">
+                <i class="fas fa-sticky-note text-primary"></i> Minhas Notas
+            </h1>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newNoteModal">
+                <i class="fas fa-plus"></i> Nova Nota
+            </button>
+        </div>
+    </div>
 
-            <!-- Lista de Notas -->
-            <div class="notes-list" id="notesList">
-                <!-- Notas serão preenchidas via JavaScript -->
+    <!-- Barra de Pesquisa e Filtros -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <span class="input-group-text bg-white">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="searchNotes" placeholder="Pesquisar notas...">
             </div>
         </div>
+        <div class="col-md-4">
+            <select class="form-select" id="filterNotes">
+                <option value="all">Todas as Notas</option>
+                <option value="recent">Recentes</option>
+                <option value="favorites">Favoritas</option>
+                <option value="archived">Arquivadas</option>
+            </select>
+        </div>
+    </div>
 
-        <!-- Editor de Notas -->
-        <div class="col-md-9 note-editor">
-            <div class="editor-toolbar mb-2">
-                <div class="btn-group">
-                    <button class="btn btn-outline-secondary" onclick="formatText('bold')">
-                        <i class="fas fa-bold"></i>
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="formatText('italic')">
-                        <i class="fas fa-italic"></i>
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="formatText('heading')">
-                        <i class="fas fa-heading"></i>
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="formatText('list')">
-                        <i class="fas fa-list-ul"></i>
-                    </button>
-                </div>
-                
-                <div class="btn-group ms-2">
-                    <button class="btn btn-outline-secondary" onclick="insertLink()">
-                        <i class="fas fa-link"></i>
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="insertImage()">
-                        <i class="fas fa-image"></i>
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="insertCode()">
-                        <i class="fas fa-code"></i>
-                    </button>
-                </div>
-
-                <div class="ms-auto">
-                    <button class="btn btn-success" onclick="saveNote()">
-                        <i class="fas fa-save"></i> Salvar
-                    </button>
+    <!-- Lista de Notas -->
+    <div class="row" id="notesList">
+        {% if notes %}
+            {% for note in notes %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ note.title }}</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-link text-muted" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="editNote('{{ note.id }}')">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="toggleFavorite('{{ note.id }}')">
+                                            <i class="fas fa-star"></i> Favoritar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="archiveNote('{{ note.id }}')">
+                                            <i class="fas fa-archive"></i> Arquivar
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#" onclick="deleteNote('{{ note.id }}')">
+                                            <i class="fas fa-trash"></i> Excluir
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <p class="card-text">{{ note.content|truncate(150) }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> {{ note.updated_at|datetime }}
+                            </small>
+                            {% if note.tags %}
+                            <div class="tags">
+                                {% for tag in note.tags %}
+                                <span class="badge bg-light text-dark">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
+            {% endfor %}
+        {% else %}
+        <div class="col text-center py-5">
+            <i class="fas fa-sticky-note fa-4x text-muted mb-3"></i>
+            <h3>Nenhuma nota encontrada</h3>
+            <p class="text-muted">Comece criando sua primeira nota!</p>
+            <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#newNoteModal">
+                <i class="fas fa-plus"></i> Criar Nota
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
 
-            <div class="editor-container">
-                <input type="text" class="form-control note-title mb-2" placeholder="Título da nota" id="noteTitle">
-                <div class="form-floating h-100">
-                    <textarea class="form-control h-100" id="noteContent" placeholder="Conteúdo da nota"></textarea>
-                    <label for="noteContent">Conteúdo da nota</label>
-                </div>
+<!-- Modal Nova Nota -->
+<div class="modal fade" id="newNoteModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Nota</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newNoteForm">
+                    <div class="mb-3">
+                        <label for="noteTitle" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="noteTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="noteContent" class="form-label">Conteúdo</label>
+                        <textarea class="form-control" id="noteContent" rows="10" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="noteTags" class="form-label">Tags</label>
+                        <input type="text" class="form-control" id="noteTags" placeholder="Separe as tags por vírgula">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveNote()">Salvar</button>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-.notes-sidebar {
-    border-right: 1px solid var(--bs-border-color);
-    height: calc(100vh - 150px);
-    overflow-y: auto;
-}
-
-.note-editor {
-    height: calc(100vh - 150px);
-    display: flex;
-    flex-direction: column;
-}
-
-.editor-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.editor-container textarea {
-    flex: 1;
-    resize: none;
-}
-
-.notes-list {
-    overflow-y: auto;
-}
-
-.note-item {
-    cursor: pointer;
-    padding: 10px;
-    border-bottom: 1px solid var(--bs-border-color);
-}
-
-.note-item:hover {
-    background-color: var(--bs-secondary-bg-subtle);
-}
-
-.note-item.active {
-    background-color: var(--bs-primary-bg-subtle);
-}
-</style>
-{% endblock %}
-
 {% block extra_js %}
 <script>
-let currentNote = null;
-
-function createNewNote() {
-    currentNote = null;
-    document.getElementById('noteTitle').value = '';
-    document.getElementById('noteContent').value = '';
-    showToast('Nova nota criada', 'info');
+// Funções para manipulação de notas
+function saveNote() {
+    // Implementar lógica de salvamento
 }
 
-function formatText(type) {
-    const textarea = document.getElementById('noteContent');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = textarea.value;
-    
-    let formattedText = '';
-    switch(type) {
-        case 'bold':
-            formattedText = `**${text.substring(start, end)}**`;
-            break;
-        case 'italic':
-            formattedText = `*${text.substring(start, end)}*`;
-            break;
-        case 'heading':
-            formattedText = `\n# ${text.substring(start, end)}`;
-            break;
-        case 'list':
-            formattedText = `\n- ${text.substring(start, end)}`;
-            break;
-    }
-    
-    textarea.value = text.substring(0, start) + formattedText + text.substring(end);
+function editNote(noteId) {
+    // Implementar lógica de edição
 }
 
-function insertLink() {
-    const url = prompt('Digite a URL:');
-    if (url) {
-        const text = prompt('Digite o texto do link:') || url;
-        const textarea = document.getElementById('noteContent');
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const markdown = `[${text}](${url})`;
-        textarea.value = textarea.value.substring(0, start) + markdown + textarea.value.substring(end);
-    }
+function toggleFavorite(noteId) {
+    // Implementar lógica de favoritar
 }
 
-function insertImage() {
-    const url = prompt('Digite a URL da imagem:');
-    if (url) {
-        const alt = prompt('Digite a descrição da imagem:') || '';
-        const textarea = document.getElementById('noteContent');
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const markdown = `![${alt}](${url})`;
-        textarea.value = textarea.value.substring(0, start) + markdown + textarea.value.substring(end);
-    }
+function archiveNote(noteId) {
+    // Implementar lógica de arquivamento
 }
 
-function insertCode() {
-    const textarea = document.getElementById('noteContent');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = textarea.value;
-    const code = text.substring(start, end);
-    textarea.value = text.substring(0, start) + '\n```\n' + code + '\n```\n' + text.substring(end);
+function deleteNote(noteId) {
+    // Implementar lógica de exclusão
 }
 
-async function saveNote() {
-    const title = document.getElementById('noteTitle').value;
-    const content = document.getElementById('noteContent').value;
-    
-    if (!title || !content) {
-        showToast('Preencha título e conteúdo', 'warning');
-        return;
-    }
+// Pesquisa em tempo real
+document.getElementById('searchNotes').addEventListener('input', function(e) {
+    // Implementar lógica de pesquisa
+});
 
-    const data = {
-        title: title,
-        content: content
-    };
-
-    try {
-        const response = await fetch('/api/v1/notes' + (currentNote ? `/${currentNote.id}` : ''), {
-            method: currentNote ? 'PUT' : 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (!response.ok) throw new Error('Erro ao salvar nota');
-
-        const savedNote = await response.json();
-        currentNote = savedNote;
-        loadNotes(); // Recarregar lista de notas
-        showToast('Nota salva com sucesso!', 'success');
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao salvar nota', 'danger');
-    }
-}
-
-async function loadNotes() {
-    try {
-        const response = await fetch('/api/v1/notes');
-        if (!response.ok) throw new Error('Erro ao carregar notas');
-        
-        const notes = await response.json();
-        const notesList = document.getElementById('notesList');
-        notesList.innerHTML = '';
-        
-        notes.forEach(note => {
-            const div = document.createElement('div');
-            div.className = 'note-item';
-            if (currentNote && currentNote.id === note.id) {
-                div.classList.add('active');
-            }
-            
-            div.innerHTML = `
-                <h6 class="mb-1">${note.title}</h6>
-                <small class="text-muted">${new Date(note.updated_at).toLocaleString()}</small>
-            `;
-            
-            div.onclick = () => loadNote(note);
-            notesList.appendChild(div);
-        });
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao carregar notas', 'danger');
-    }
-}
-
-async function loadNote(note) {
-    try {
-        const response = await fetch(`/api/v1/notes/${note.id}`);
-        if (!response.ok) throw new Error('Erro ao carregar nota');
-        
-        const fullNote = await response.json();
-        currentNote = fullNote;
-        
-        document.getElementById('noteTitle').value = fullNote.title;
-        document.getElementById('noteContent').value = fullNote.content;
-        
-        // Atualizar seleção na lista
-        document.querySelectorAll('.note-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.querySelector('h6').textContent === fullNote.title) {
-                item.classList.add('active');
-            }
-        });
-    } catch (error) {
-        console.error('Erro:', error);
-        showToast('Erro ao carregar nota', 'danger');
-    }
-}
-
-function showToast(message, type = 'info') {
-    // Implementar toast de notificação
-    alert(message);
-}
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', () => {
-    loadNotes();
-    
-    // Implementar pesquisa
-    const searchInput = document.getElementById('searchNotes');
-    searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        document.querySelectorAll('.note-item').forEach(item => {
-            const title = item.querySelector('h6').textContent.toLowerCase();
-            item.style.display = title.includes(query) ? 'block' : 'none';
-        });
-    });
+// Filtro de notas
+document.getElementById('filterNotes').addEventListener('change', function(e) {
+    // Implementar lógica de filtro
 });
 </script>
 {% endblock %} 

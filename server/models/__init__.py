@@ -1,2 +1,3 @@
-# Definir quais módulos serão expostos
-__all__ = ["User", "Note", "Task", "TaskList", "Event"]
+from server.models.user import User
+
+__all__ = ["User"]

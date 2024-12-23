@@ -14,8 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Instalar dependências no venv
 ENV PATH="/opt/venv/bin:$PATH"
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt setup.py ./
+COPY server ./server
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install -e .
 
 # Stage final: apenas o necessário para Flask
 FROM python:3.11-slim
@@ -32,11 +34,13 @@ WORKDIR /app
 
 # Copiar apenas o necessário
 COPY --from=builder /opt/venv /opt/venv
+COPY setup.py ./
 COPY server ./server
 
 # Configurar usuário e diretórios Flask
 RUN useradd -m -u 1000 appuser \
-    && chown -R appuser:appuser /app
+    && chown -R appuser:appuser /app \
+    && pip install -e .
 
 USER appuser
 EXPOSE 5001

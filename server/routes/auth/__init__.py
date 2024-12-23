@@ -1,4 +1,8 @@
-from .decorators import require_auth
-from .clerk import auth_bp
+from flask import Blueprint, jsonify, Response
 
-__all__ = ["require_auth", "auth_bp"]
+auth_bp = Blueprint("auth", __name__)
+
+
+@auth_bp.route("/status")
+def status() -> tuple[Response, int]:
+    return jsonify({"status": "online", "auth_provider": "clerk"}), 200
