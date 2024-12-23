@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Calendário{% endblock %}
+
+{% block page_title %}Calendário{% endblock %}
+
+{% block head %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css' rel='stylesheet' />
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <!-- Sidebar do Calendário -->
+        <div class="col-md-3 calendar-sidebar">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Eventos</h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#eventModal">
+                    <i class="bi bi-plus-lg"></i> Novo Evento
+                </button>
+            </div>
+
+            <!-- Mini Calendário -->
+            <div class="mini-calendar mb-3" id="miniCalendar"></div>
+
+            <!-- Lista de Próximos Eventos -->
+            <div class="upcoming-events">
+                <h6 class="mb-3">Próximos Eventos</h6>
+                <div id="upcomingEventsList">
+                    <!-- Eventos serão preenchidos via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendário Principal -->
+        <div class="col-md-9 main-calendar">
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Evento -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="eventForm">
+                    <div class="mb-3">
+                        <label class="form-label">Título</label>
+                        <input type="text" class="form-control" id="eventTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" id="eventDescription" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Data Início</label>
+                            <input type="datetime-local" class="form-control" id="eventStart" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Data Fim</label>
+                            <input type="datetime-local" class="form-control" id="eventEnd" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cor</label>
+                        <select class="form-select" id="eventColor">
+                            <option value="#2563eb">Azul</option>
+                            <option value="#16a34a">Verde</option>
+                            <option value="#dc2626">Vermelho</option>
+                            <option value="#ca8a04">Amarelo</option>
+                            <option value="#9333ea">Roxo</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveEvent()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js'></script>
+<script>
+    let calendar;
+    let miniCalendar;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicialização do Calendário Principal
+        const calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'pt-br',
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            editable: true,
+            selectable: true,
+            selectMirror: true,
+            dayMaxEvents: true,
+            eventClick: function(info) {
+                // Implementar edição de evento
+            },
+            select: function(info) {
+                // Implementar criação de evento
+                const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+                document.getElementById('eventStart').value = info.startStr;
+                document.getElementById('eventEnd').value = info.endStr;
+                modal.show();
+            }
+        });
+        calendar.render();
+
+        // Inicialização do Mini Calendário
+        const miniCalendarEl = document.getElementById('miniCalendar');
+        miniCalendar = new FullCalendar.Calendar(miniCalendarEl, {
+            locale: 'pt-br',
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev',
+                center: 'title',
+                right: 'next'
+            },
+            height: 'auto',
+            dateClick: function(info) {
+                calendar.gotoDate(info.date);
+            }
+        });
+        miniCalendar.render();
+
+        // Carregar eventos iniciais
+        loadEvents();
+    });
+
+    async function loadEvents() {
+        showLoading();
+        try {
+            // Implementar carregamento de eventos do backend
+        } catch (error) {
+            showToast('Erro ao carregar eventos', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function saveEvent() {
+        const eventData = {
+            title: document.getElementById('eventTitle').value,
+            description: document.getElementById('eventDescription').value,
+            start: document.getElementById('eventStart').value,
+            end: document.getElementById('eventEnd').value,
+            color: document.getElementById('eventColor').value
+        };
+
+        if (!eventData.title || !eventData.start || !eventData.end) {
+            showToast('Preencha os campos obrigatórios', 'warning');
+            return;
+        }
+
+        showLoading();
+        try {
+            // Implementar salvamento no backend
+            calendar.addEvent(eventData);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
+            modal.hide();
+            showToast('Evento criado com sucesso!', 'success');
+        } catch (error) {
+            showToast('Erro ao salvar evento', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function updateUpcomingEvents() {
+        const upcomingList = document.getElementById('upcomingEventsList');
+        const events = calendar.getEvents();
+        const now = new Date();
+        
+        // Filtrar e ordenar eventos futuros
+        const upcomingEvents = events
+            .filter(event => event.start >= now)
+            .sort((a, b) => a.start - b.start)
+            .slice(0, 5);
+
+        // Atualizar lista
+        upcomingList.innerHTML = upcomingEvents.length ? 
+            upcomingEvents.map(event => `
+                <div class="upcoming-event-item">
+                    <div class="event-dot" style="background-color: ${event.backgroundColor}"></div>
+                    <div class="event-info">
+                        <div class="event-title">${event.title}</div>
+                        <div class="event-date">${event.start.toLocaleDateString()}</div>
+                    </div>
+                </div>
+            `).join('') :
+            '<p class="text-muted">Nenhum evento próximo</p>';
+    }
+</script>
+{% endblock %} 

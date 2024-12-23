@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Tarefas{% endblock %}
+
+{% block page_title %}Tarefas{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <!-- Sidebar de Tarefas -->
+        <div class="col-md-3 tasks-sidebar">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Listas</h5>
+                <button class="btn btn-primary btn-sm" onclick="createNewList()">
+                    <i class="bi bi-plus-lg"></i> Nova Lista
+                </button>
+            </div>
+
+            <!-- Listas de Tarefas -->
+            <div class="task-lists" id="taskLists">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action active" onclick="filterTasks('all')">
+                        <i class="bi bi-collection"></i> Todas as Tarefas
+                        <span class="badge bg-primary rounded-pill float-end" id="allTasksCount">0</span>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="filterTasks('today')">
+                        <i class="bi bi-calendar-day"></i> Hoje
+                        <span class="badge bg-primary rounded-pill float-end" id="todayTasksCount">0</span>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="filterTasks('week')">
+                        <i class="bi bi-calendar-week"></i> Esta Semana
+                        <span class="badge bg-primary rounded-pill float-end" id="weekTasksCount">0</span>
+                    </a>
+                    <!-- Listas personalizadas serão adicionadas aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Tarefas -->
+        <div class="col-md-9 tasks-main">
+            <div class="tasks-header mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 id="currentListTitle">Todas as Tarefas</h4>
+                    <button class="btn btn-primary" onclick="showNewTaskModal()">
+                        <i class="bi bi-plus-lg"></i> Nova Tarefa
+                    </button>
+                </div>
+                <div class="task-filters mt-2">
+                    <div class="btn-group">
+                        <button class="btn btn-outline-secondary active" onclick="sortTasks('date')">
+                            <i class="bi bi-calendar"></i> Data
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="sortTasks('priority')">
+                            <i class="bi bi-flag"></i> Prioridade
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="sortTasks('alphabetical')">
+                            <i class="bi bi-sort-alpha-down"></i> Alfabético
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Tarefas -->
+            <div class="tasks-list" id="tasksList">
+                <!-- Tarefas serão preenchidas via JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Tarefa -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Tarefa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <div class="mb-3">
+                        <label class="form-label">Título</label>
+                        <input type="text" class="form-control" id="taskTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" id="taskDescription" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Data de Vencimento</label>
+                            <input type="date" class="form-control" id="taskDueDate">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Prioridade</label>
+                            <select class="form-select" id="taskPriority">
+                                <option value="low">Baixa</option>
+                                <option value="medium">Média</option>
+                                <option value="high">Alta</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lista</label>
+                        <select class="form-select" id="taskList">
+                            <option value="default">Lista Padrão</option>
+                            <!-- Outras listas serão adicionadas dinamicamente -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveTask()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Lista -->
+<div class="modal fade" id="listModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Lista</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="listForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Lista</label>
+                        <input type="text" class="form-control" id="listName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cor</label>
+                        <select class="form-select" id="listColor">
+                            <option value="#2563eb">Azul</option>
+                            <option value="#16a34a">Verde</option>
+                            <option value="#dc2626">Vermelho</option>
+                            <option value="#ca8a04">Amarelo</option>
+                            <option value="#9333ea">Roxo</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveList()">Criar Lista</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentFilter = 'all';
+    let currentSort = 'date';
+
+    function showNewTaskModal() {
+        const modal = new bootstrap.Modal(document.getElementById('taskModal'));
+        modal.show();
+    }
+
+    function createNewList() {
+        const modal = new bootstrap.Modal(document.getElementById('listModal'));
+        modal.show();
+    }
+
+    async function saveTask() {
+        const taskData = {
+            title: document.getElementById('taskTitle').value,
+            description: document.getElementById('taskDescription').value,
+            dueDate: document.getElementById('taskDueDate').value,
+            priority: document.getElementById('taskPriority').value,
+            list: document.getElementById('taskList').value
+        };
+
+        if (!taskData.title) {
+            showToast('O título da tarefa é obrigatório', 'warning');
+            return;
+        }
+
+        showLoading();
+        try {
+            // Implementar salvamento no backend
+            const modal = bootstrap.Modal.getInstance(document.getElementById('taskModal'));
+            modal.hide();
+            showToast('Tarefa criada com sucesso!', 'success');
+            loadTasks();
+        } catch (error) {
+            showToast('Erro ao salvar tarefa', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function saveList() {
+        const listData = {
+            name: document.getElementById('listName').value,
+            color: document.getElementById('listColor').value
+        };
+
+        if (!listData.name) {
+            showToast('O nome da lista é obrigatório', 'warning');
+            return;
+        }
+
+        showLoading();
+        try {
+            // Implementar salvamento no backend
+            const modal = bootstrap.Modal.getInstance(document.getElementById('listModal'));
+            modal.hide();
+            showToast('Lista criada com sucesso!', 'success');
+            loadLists();
+        } catch (error) {
+            showToast('Erro ao criar lista', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function filterTasks(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.task-lists .list-group-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector(`[onclick="filterTasks('${filter}')"]`).classList.add('active');
+        loadTasks();
+    }
+
+    function sortTasks(sort) {
+        currentSort = sort;
+        document.querySelectorAll('.task-filters .btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[onclick="sortTasks('${sort}')"]`).classList.add('active');
+        loadTasks();
+    }
+
+    async function loadTasks() {
+        showLoading();
+        try {
+            // Implementar carregamento de tarefas do backend
+            updateTaskCounts();
+        } catch (error) {
+            showToast('Erro ao carregar tarefas', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function loadLists() {
+        showLoading();
+        try {
+            // Implementar carregamento de listas do backend
+        } catch (error) {
+            showToast('Erro ao carregar listas', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function updateTaskCounts() {
+        // Implementar contagem de tarefas
+        document.getElementById('allTasksCount').textContent = '0';
+        document.getElementById('todayTasksCount').textContent = '0';
+        document.getElementById('weekTasksCount').textContent = '0';
+    }
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+        loadLists();
+        loadTasks();
+    });
+</script>
+{% endblock %} 

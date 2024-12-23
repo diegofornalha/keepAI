@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil{% endblock %}
+
+{% block page_title %}Perfil{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Card de Perfil -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="profile-image mb-3">
+                        <img src="{{ url_for('static', filename='img/default-avatar.png') }}" 
+                             alt="Foto de Perfil" 
+                             class="rounded-circle img-fluid"
+                             style="width: 150px;">
+                        <div class="profile-image-overlay">
+                            <button class="btn btn-light btn-sm" onclick="document.getElementById('profileImage').click()">
+                                <i class="bi bi-camera"></i>
+                            </button>
+                            <input type="file" id="profileImage" hidden accept="image/*" onchange="updateProfileImage(this)">
+                        </div>
+                    </div>
+                    <h5 class="mb-1" id="profileName">Nome do Usuário</h5>
+                    <p class="text-muted mb-3" id="profileEmail">usuario@email.com</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-primary" onclick="editProfile()">
+                            <i class="bi bi-pencil"></i> Editar Perfil
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="showDeleteAccountModal()">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card de Estatísticas -->
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Estatísticas</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Notas Criadas</span>
+                        <span class="badge bg-primary rounded-pill" id="notesCount">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tarefas Concluídas</span>
+                        <span class="badge bg-success rounded-pill" id="tasksCount">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Eventos Agendados</span>
+                        <span class="badge bg-info rounded-pill" id="eventsCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <!-- Configurações -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Configurações</h5>
+                    
+                    <!-- Preferências -->
+                    <h6 class="mb-3">Preferências</h6>
+                    <div class="mb-4">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="darkMode">
+                            <label class="form-check-label" for="darkMode">Modo Escuro</label>
+                        </div>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="emailNotifications">
+                            <label class="form-check-label" for="emailNotifications">Notificações por Email</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="desktopNotifications">
+                            <label class="form-check-label" for="desktopNotifications">Notificações Desktop</label>
+                        </div>
+                    </div>
+
+                    <!-- Segurança -->
+                    <h6 class="mb-3">Segurança</h6>
+                    <div class="mb-4">
+                        <button class="btn btn-outline-primary mb-2" onclick="changePassword()">
+                            <i class="bi bi-key"></i> Alterar Senha
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="enable2FA()">
+                            <i class="bi bi-shield-lock"></i> Ativar Autenticação em 2 Fatores
+                        </button>
+                    </div>
+
+                    <!-- Exportar Dados -->
+                    <h6 class="mb-3">Dados</h6>
+                    <div>
+                        <button class="btn btn-outline-primary" onclick="exportData()">
+                            <i class="bi bi-download"></i> Exportar Meus Dados
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Perfil -->
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Perfil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="profileForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="editName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Biografia</label>
+                        <textarea class="form-control" id="editBio" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveProfile()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Alterar Senha -->
+<div class="modal fade" id="passwordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Alterar Senha</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="passwordForm">
+                    <div class="mb-3">
+                        <label class="form-label">Senha Atual</label>
+                        <input type="password" class="form-control" id="currentPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nova Senha</label>
+                        <input type="password" class="form-control" id="newPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirmar Nova Senha</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="savePassword()">Alterar Senha</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Excluir Conta -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Excluir Conta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger">Atenção: Esta ação não pode ser desfeita!</p>
+                <p>Para confirmar a exclusão da sua conta, digite sua senha:</p>
+                <input type="password" class="form-control" id="deleteAccountPassword">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="deleteAccount()">Excluir Conta</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Funções de Perfil
+    function editProfile() {
+        document.getElementById('editName').value = document.getElementById('profileName').textContent;
+        document.getElementById('editEmail').value = document.getElementById('profileEmail').textContent;
+        const modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+        modal.show();
+    }
+
+    async function saveProfile() {
+        const profileData = {
+            name: document.getElementById('editName').value,
+            email: document.getElementById('editEmail').value,
+            bio: document.getElementById('editBio').value
+        };
+
+        if (!profileData.name || !profileData.email) {
+            showToast('Nome e email são obrigatórios', 'warning');
+            return;
+        }
+
+        showLoading();
+        try {
+            // Implementar atualização no backend
+            document.getElementById('profileName').textContent = profileData.name;
+            document.getElementById('profileEmail').textContent = profileData.email;
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editProfileModal'));
+            modal.hide();
+            showToast('Perfil atualizado com sucesso!', 'success');
+        } catch (error) {
+            showToast('Erro ao atualizar perfil', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Funções de Senha
+    function changePassword() {
+        const modal = new bootstrap.Modal(document.getElementById('passwordModal'));
+        modal.show();
+    }
+
+    async function savePassword() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            showToast('Todos os campos são obrigatórios', 'warning');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showToast('As senhas não coincidem', 'warning');
+            return;
+        }
+
+        showLoading();
+        try {
+            // Implementar alteração de senha no backend
+            const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+            modal.hide();
+            showToast('Senha alterada com sucesso!', 'success');
+        } catch (error) {
+            showToast('Erro ao alterar senha', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Funções de Conta
+    function showDeleteAccountModal() {
+        const modal = new bootstrap.Modal(document.getElementById('deleteAccountModal'));
+        modal.show();
+    }
+
+    async function deleteAccount() {
+        const password = document.getElementById('deleteAccountPassword').value;
+
+        if (!password) {
+            showToast('Digite sua senha para confirmar', 'warning');
+            return;
+        }
+
+        showLoading();
+        try {
+            // Implementar exclusão de conta no backend
+            window.location.href = '/logout';
+        } catch (error) {
+            showToast('Erro ao excluir conta', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Funções de Imagem
+    async function updateProfileImage(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            showLoading();
+            try {
+                // Implementar upload de imagem no backend
+                showToast('Foto de perfil atualizada!', 'success');
+            } catch (error) {
+                showToast('Erro ao atualizar foto', 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+    }
+
+    // Funções de Preferências
+    document.querySelectorAll('.form-check-input').forEach(input => {
+        input.addEventListener('change', async function() {
+            showLoading();
+            try {
+                // Implementar atualização de preferências no backend
+                showToast('Preferências atualizadas!', 'success');
+            } catch (error) {
+                this.checked = !this.checked; // Reverter mudança em caso de erro
+                showToast('Erro ao atualizar preferências', 'danger');
+            } finally {
+                hideLoading();
+            }
+        });
+    });
+
+    // Funções de Segurança
+    async function enable2FA() {
+        showLoading();
+        try {
+            // Implementar ativação de 2FA no backend
+            showToast('2FA ativado com sucesso!', 'success');
+        } catch (error) {
+            showToast('Erro ao ativar 2FA', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Funções de Dados
+    async function exportData() {
+        showLoading();
+        try {
+            // Implementar exportação de dados no backend
+            showToast('Seus dados foram exportados!', 'success');
+        } catch (error) {
+            showToast('Erro ao exportar dados', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', async () => {
+        showLoading();
+        try {
+            // Carregar dados do perfil do backend
+            // Carregar estatísticas
+            document.getElementById('notesCount').textContent = '0';
+            document.getElementById('tasksCount').textContent = '0';
+            document.getElementById('eventsCount').textContent = '0';
+        } catch (error) {
+            showToast('Erro ao carregar dados do perfil', 'danger');
+        } finally {
+            hideLoading();
+        }
+    });
+</script>
+{% endblock %} 
