@@ -1,21 +1,24 @@
-import os
-import sys
+from typing import Optional
 
-# Adicionar o diretório atual ao PYTHONPATH
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(current_dir)
-
-from flask import Flask, render_template
+from flask import Flask, g, render_template
 from flask_cors import CORS
 
-from config.security import SecurityConfig
-from config.settings import Settings
-from modules import register_modules
-from utils.logger import setup_logger
+from keepai.apps.server.config.security import SecurityConfig
+from keepai.apps.server.config.settings import Settings
+from keepai.apps.server.core.container import Container
+from keepai.apps.server.modules import register_modules
+from keepai.apps.server.utils.logger import setup_logger
 
 
-def create_app(config_object=None):
-    """Application Factory Pattern do Flask"""
+def create_app(config_object: Optional[Settings] = None) -> Flask:
+    """Application Factory Pattern do Flask
+
+    Args:
+        config_object: Objeto de configuração opcional
+
+    Returns:
+        Flask: Aplicação Flask configurada
+    """
     app = Flask(__name__)
 
     # Configurar logger
@@ -30,18 +33,37 @@ def create_app(config_object=None):
 
     # Configurar segurança
     security = SecurityConfig()
-    for header, value in security.SECURE_HEADERS.items():
-        app.config[f"SECURITY_{header}"] = value
+    security.configure(app)
+
+    # Criar container de dependências
+    container = Container(app)
+    app.container = container
 
     # Registrar módulos
     register_modules(app)
 
-    # Rota principal
+    # Registrar rotas base
+    register_base_routes(app)
+
+    @app.before_request
+    def before_request():
+        """Disponibiliza o container para os módulos"""
+        g.container = app.container
+
+    return app
+
+
+def register_base_routes(app: Flask) -> None:
+    """Registra as rotas base da aplicação
+
+    Args:
+        app: Aplicação Flask
+    """
+
     @app.route("/")
     def index():
         return render_template("index.html")
 
-    # Rota de healthcheck
     @app.route("/health")
     def health_check():
         return {
@@ -49,8 +71,6 @@ def create_app(config_object=None):
             "environment": app.config.get("ENV", "production"),
             "debug": app.config.get("DEBUG", False),
         }
-
-    return app
 
 
 if __name__ == "__main__":
