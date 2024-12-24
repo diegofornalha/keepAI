@@ -5,7 +5,6 @@ import statistics
 import matplotlib.pyplot as plt  # type: ignore
 from datetime import datetime
 import json
-import os
 from typing import Dict, Any, List, Optional, Tuple
 
 

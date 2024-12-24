@@ -1,3 +1,10 @@
+# Ambientes virtuais
+.venv/
+venv/
+ENV/
+env/
+virtualenv/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -20,73 +27,59 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
-.venv/
-venv/
-env/
-ENV/
+# Jupyter Notebook
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
 
-# IDE
+# Testes e cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Logs e databases
+*.log
+*.sqlite
+*.db
+*.db-journal
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.*
+!.env.example
+
+# IDE e editores
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 .DS_Store
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# Logs
-*.log
-logs/
-log/
-
-# Coverage
-.coverage
-coverage/
-htmlcov/
-
-# Testing
-.pytest_cache/
-.tox/
-.coverage
-.coverage.*
-nosetests.xml
-coverage.xml
-*.cover
 
 # Docker
 .docker/
+docker-compose.override.yml
 
-# Database
-*.db
-*.sqlite3
+# Arquivos temporários
+*.bak
+*.tmp
+*.temp
+.ruff_cache/
 
-# Misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.pem
-*.key
-*.crt
-*.cer
-*.der
-*.priv
-
-# Dependencies
-node_modules/
-jspm_packages/
-bower_components/
-
-# Distribution
-dist/
-build/
-*.pyc
-
-# Duplicated files prevention
-**/app.py
-!server/app.py
+# Diretórios específicos do projeto
+/static/node_modules/
+/notebooks/.local/
+/notebooks/.config/
+/notebooks/.cache/
+/notebooks/.jupyter/
+/notebooks/.ipython/

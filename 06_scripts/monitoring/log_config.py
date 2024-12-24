@@ -1,6 +1,5 @@
 import logging
 import logging.config
-from typing import Dict, Any
 from pythonjsonlogger import jsonlogger  # type: ignore
 
 

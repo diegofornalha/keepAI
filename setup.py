@@ -1,9 +1,10 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="server",
+    name="keepai",
     version="0.1",
-    packages=find_packages(),
+    package_dir={"": "server"},
+    packages=find_packages(where="server"),
     install_requires=[
         "flask",
         "flask-cors",
@@ -14,6 +15,9 @@ setup(
         "langchain",  # Para funcionalidades de IA
         "google-generativeai",  # Para integração com Gemini
         "pyjwt",  # Para validação de tokens JWT do Clerk
-        # Adicione outras dependências aqui
+        "jupyter",  # Para notebooks
+        "pandas",  # Para análise de dados
+        "notebook",  # Para Jupyter Notebook
+        "jupyterlab",  # Para ambiente JupyterLab
     ],
 )

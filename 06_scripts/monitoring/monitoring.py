@@ -1,9 +1,12 @@
 import time
-from typing import Dict, Any, Optional, cast, Type, Union
+from typing import Any, cast
 
 try:
     import psutil
-    from prometheus_client import start_http_server, Gauge  # type: ignore[import-not-found]
+    from prometheus_client import (  # type: ignore[import-not-found]
+        start_http_server,
+        Gauge,
+    )
 except ImportError:
     psutil = cast(Any, None)
     start_http_server = cast(Any, None)

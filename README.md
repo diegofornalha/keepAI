@@ -90,32 +90,39 @@ mypy .
 ## Estrutura do Projeto
 
 ```
-keepai/
-├── server/                    # Aplicação principal
-│   ├── __init__.py           # Inicialização do pacote
-│   ├── app.py                # Factory pattern e configuração do Flask
-│   ├── config.py             # Configurações da aplicação
-│   ├── database.py           # Configuração do Supabase
-│   ├── models/               # Modelos de dados
-│   ├── routes/               # Rotas da API e páginas
-│   │   ├── __init__.py      # Registro de blueprints
-│   │   ├── api/             # Endpoints da API
-│   │   ├── auth/            # Rotas de autenticação
-│   │   └── main.py          # Rotas principais
-│   ├── templates/           # Templates HTML
-│   ├── static/             # Arquivos estáticos
-│   ├── utils/              # Utilitários
-│   └── langchain_components/ # Componentes do LangChain
-├── migrations/              # Migrações do banco de dados
-├── scripts/                # Scripts de utilidade
-├── infra/                  # Configurações de infraestrutura
-├── nginx/                  # Configurações do Nginx
-├── wsgi.py                # Ponto de entrada para produção
-├── requirements.txt        # Dependências Python
-├── setup.py               # Configuração do pacote Python
-├── Dockerfile             # Configuração do Docker
-└── docker-compose.yml     # Configuração do Docker Compose
+/KeepAI
+├── 01_migrations/          # Estrutura e evolução do banco de dados
+│   ├── 01_create_notes_table.sql
+│   └── 02_create_profiles_table.sql
+│
+├── 02_notebooks/          # Notebooks Jupyter para testes e análises
+│   ├── keepAI.ipynb
+│   └── keepAI_profiles_test.ipynb
+│
+├── 03_server/            # Código principal da aplicação
+│   ├── config/          # Configurações
+│   ├── modules/         # Módulos da aplicação
+│   └── langchain_components/  # Componentes LangChain
+│
+├── 04_infra/            # Configurações de infraestrutura
+│   ├── docker/         # Configurações Docker
+│   └── kubernetes/     # Configurações Kubernetes
+│
+├── 05_nginx/            # Configurações do servidor web
+│   └── conf.d/         # Arquivos de configuração Nginx
+│
+└── 06_scripts/          # Scripts de utilidade e automação
+    └── setup_database.py
 ```
+
+## Prioridades e Dependências
+
+1. **01_migrations**: Base do projeto, define a estrutura do banco de dados
+2. **02_notebooks**: Ferramentas para teste e análise do sistema
+3. **03_server**: Implementação principal da aplicação
+4. **04_infra**: Configurações de infraestrutura para deploy
+5. **05_nginx**: Configurações do servidor web
+6. **06_scripts**: Scripts auxiliares e automações
 
 ## Tecnologias Principais
 

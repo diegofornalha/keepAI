@@ -1,8 +1,6 @@
-from logging.config import fileConfig
 import os
 import sys
 from dotenv import load_dotenv
-from typing import Optional, Any, Dict
 from supabase import create_client, Client
 
 # Adicionar o diretório raiz ao PATH para importar os modelos

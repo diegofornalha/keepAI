@@ -18,19 +18,26 @@ class NotesManager:
             raise RuntimeError("Não foi possível inicializar o cliente Supabase")
         self.client: Client = client
 
-    def create_note(self, title: str, content: str) -> Dict[str, Any]:
+    def create_note(
+        self, user_id: str, content: str, title: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Cria uma nova nota.
 
         Args:
-            title: Título da nota
+            user_id: ID do usuário
             content: Conteúdo da nota
+            title: Título da nota (opcional)
 
         Returns:
             Dict[str, Any]: Dados da nota criada ou erro
         """
         try:
-            data = {"title": title, "content": content}
+            data = {
+                "user_id": user_id,
+                "content": content,
+                "title": title if title else "",
+            }
             response = self.client.table("notes").insert(data).execute()
             return {"success": True, "note": response.data[0]}
         except Exception as e:
