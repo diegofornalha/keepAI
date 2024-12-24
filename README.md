@@ -9,24 +9,32 @@ KeepAI é um aplicativo web moderno para gerenciamento de notas, tarefas e calen
 - 📅 **Calendário**: Organize seus eventos e compromissos
 - 🤖 **IA**: Assistente inteligente para ajudar em suas atividades
 - 🔄 **Sincronização**: Seus dados sempre atualizados em todos os dispositivos
-- 🌙 **Tema Escuro**: Interface adaptável para melhor conforto visual
 
 ## Arquitetura
 
-O KeepAI segue uma arquitetura modular e limpa:
+Este projeto utiliza uma arquitetura desacoplada (Decoupled Architecture) com duas camadas principais:
 
-- **API RESTful**: Interface clara e bem definida para todas as operações
-- **Autenticação**: Opção de autenticação com Clerk
-- **Banco de Dados**: Persistência eficiente com Supabase
-- **Frontend**: Interface feita no flask
-- **IA**: Integração otimizada com Google Gemini
+### Backend (API) - FastAPI
+
+- Responsável pela lógica de negócios e dados
+- API REST com FastAPI
+- Validação automática com Pydantic
+- Documentação automática (Swagger/OpenAPI)
+- Suporte assíncrono nativo
+
+### Frontend (Web) - Flask
+
+- Interface do usuário e renderização de templates
+- Gerenciamento de sessões
+- Templates Jinja2
+- Integração com a API via httpx
 
 ## Tecnologias
 
 - **Backend**:
 
   - Python 3.11
-  - Flask (Framework em Python)
+  - FastAPI (Framework em Python)
   - Supabase (Banco de Dados)
   - Clerk (Autenticação)
   - JWT (Tokens de Acesso)
@@ -58,11 +66,7 @@ cd keepai
 ```
 
 2. Configure o ambiente:
-
-```bash
-cp .env.example .env
-# Configure suas variáveis de ambiente no .env
-```
+   Posteriomente passarei instrucões para configurar o ambiente
 
 3. Inicie o container:
 

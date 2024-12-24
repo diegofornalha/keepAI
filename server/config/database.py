@@ -1,5 +1,5 @@
 import os
-from supabase import create_client, Client
+from supabase.client import create_client, AsyncClient
 from dotenv import load_dotenv
 
 # Carrega variáveis de ambiente
@@ -14,7 +14,7 @@ if not SUPABASE_URL or not SUPABASE_KEY:
         "As variáveis de ambiente SUPABASE_URL e SUPABASE_KEY devem estar definidas"
     )
 
-# Cliente do Supabase
-supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Cliente assíncrono do Supabase
+supabase_client: AsyncClient = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 __all__ = ["supabase_client"]

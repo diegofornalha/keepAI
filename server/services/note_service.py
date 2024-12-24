@@ -12,8 +12,11 @@ class NoteService:
     async def create_note(user_id: str, note_data: NoteCreate) -> Optional[Note]:
         """Cria uma nova nota."""
         try:
-            data = note_data.model_dump()
-            data["user_id"] = user_id
+            data = {
+                "user_id": user_id,
+                "title": note_data.title,
+                "content": note_data.content,
+            }
             response = await supabase_client.table("notes").insert(data).execute()
             if response.data:
                 return Note.model_validate(response.data[0])
@@ -32,6 +35,7 @@ class NoteService:
                 .eq("id", str(note_id))
                 .eq("user_id", user_id)
                 .single()
+                .execute()
             )
             if response.data:
                 return Note.model_validate(response.data)
@@ -42,13 +46,12 @@ class NoteService:
 
     @staticmethod
     async def list_notes(user_id: str) -> List[Note]:
-        """Lista todas as notas de um usuário."""
+        """Lista todas as notas do usuário."""
         try:
             response = (
                 await supabase_client.table("notes")
                 .select("*")
                 .eq("user_id", user_id)
-                .order("created_at", desc=True)
                 .execute()
             )
             return [Note.model_validate(note) for note in response.data]
@@ -62,10 +65,9 @@ class NoteService:
     ) -> Optional[Note]:
         """Atualiza uma nota."""
         try:
-            data = note_data.model_dump(exclude_unset=True)
             response = (
                 await supabase_client.table("notes")
-                .update(data)
+                .update(note_data.model_dump(exclude_unset=True))
                 .eq("id", str(note_id))
                 .eq("user_id", user_id)
                 .execute()

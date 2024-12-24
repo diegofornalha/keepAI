@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Dict, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import HTTPBearer
@@ -19,6 +19,9 @@ async def create_task(task_data: TaskCreate, user_id: UUID = Depends(security)) 
         if not task:
             raise HTTPException(status_code=400, detail="Erro ao criar tarefa")
         return task
+    except HTTPException as e:
+        logger.error(f"Erro ao criar tarefa: {e.detail}")
+        raise
     except Exception as e:
         logger.error(f"Erro ao criar tarefa: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -32,6 +35,9 @@ async def get_task(task_id: UUID, user_id: UUID = Depends(security)) -> Task:
         if not task:
             raise HTTPException(status_code=404, detail="Tarefa não encontrada")
         return task
+    except HTTPException as e:
+        logger.error(f"Erro ao buscar tarefa: {e.detail}")
+        raise
     except Exception as e:
         logger.error(f"Erro ao buscar tarefa: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -62,6 +68,9 @@ async def update_task(
         if not task:
             raise HTTPException(status_code=404, detail="Tarefa não encontrada")
         return task
+    except HTTPException as e:
+        logger.error(f"Erro ao atualizar tarefa: {e.detail}")
+        raise
     except Exception as e:
         logger.error(f"Erro ao atualizar tarefa: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -77,6 +86,9 @@ async def delete_task(
         if not success:
             raise HTTPException(status_code=404, detail="Tarefa não encontrada")
         return {"message": "Tarefa deletada com sucesso"}
+    except HTTPException as e:
+        logger.error(f"Erro ao deletar tarefa: {e.detail}")
+        raise
     except Exception as e:
         logger.error(f"Erro ao deletar tarefa: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")

@@ -1,13 +1,19 @@
 import pytest
 from unittest.mock import patch, AsyncMock
-from fastapi import HTTPException
+from fastapi.testclient import TestClient
 
 from server.services.task_service import TaskService
-from server.models.task import TaskStatus
+from server.models.task import Task, TaskCreate, TaskStatus
+from server.models.user import UserProfile
 
 
 @pytest.mark.asyncio
-async def test_create_task_success(client, test_user, test_task, test_task_create):
+async def test_create_task_success(
+    client: TestClient,
+    test_user: UserProfile,
+    test_task: Task,
+    test_task_create: TaskCreate,
+) -> None:
     """Testa criação de tarefa com sucesso."""
     with patch.object(
         TaskService, "create_task", new_callable=AsyncMock
@@ -16,7 +22,7 @@ async def test_create_task_success(client, test_user, test_task, test_task_creat
         response = client.post(
             "/api/tasks/",
             headers={"Authorization": f"Bearer {test_user.id}"},
-            json=test_task_create.model_dump()
+            json=test_task_create.model_dump(),
         )
         assert response.status_code == 200
         data = response.json()
@@ -25,7 +31,9 @@ async def test_create_task_success(client, test_user, test_task, test_task_creat
 
 
 @pytest.mark.asyncio
-async def test_create_task_failure(client, test_user, test_task_create):
+async def test_create_task_failure(
+    client: TestClient, test_user: UserProfile, test_task_create: TaskCreate
+) -> None:
     """Testa falha na criação de tarefa."""
     with patch.object(
         TaskService, "create_task", new_callable=AsyncMock
@@ -34,21 +42,21 @@ async def test_create_task_failure(client, test_user, test_task_create):
         response = client.post(
             "/api/tasks/",
             headers={"Authorization": f"Bearer {test_user.id}"},
-            json=test_task_create.model_dump()
+            json=test_task_create.model_dump(),
         )
         assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_get_task_success(client, test_user, test_task):
+async def test_get_task_success(
+    client: TestClient, test_user: UserProfile, test_task: Task
+) -> None:
     """Testa busca de tarefa com sucesso."""
-    with patch.object(
-        TaskService, "get_task", new_callable=AsyncMock
-    ) as mock_get_task:
+    with patch.object(TaskService, "get_task", new_callable=AsyncMock) as mock_get_task:
         mock_get_task.return_value = test_task
         response = client.get(
             f"/api/tasks/{test_task.id}",
-            headers={"Authorization": f"Bearer {test_user.id}"}
+            headers={"Authorization": f"Bearer {test_user.id}"},
         )
         assert response.status_code == 200
         data = response.json()
@@ -57,29 +65,30 @@ async def test_get_task_success(client, test_user, test_task):
 
 
 @pytest.mark.asyncio
-async def test_get_task_not_found(client, test_user, test_task):
+async def test_get_task_not_found(
+    client: TestClient, test_user: UserProfile, test_task: Task
+) -> None:
     """Testa busca de tarefa não encontrada."""
-    with patch.object(
-        TaskService, "get_task", new_callable=AsyncMock
-    ) as mock_get_task:
+    with patch.object(TaskService, "get_task", new_callable=AsyncMock) as mock_get_task:
         mock_get_task.return_value = None
         response = client.get(
             f"/api/tasks/{test_task.id}",
-            headers={"Authorization": f"Bearer {test_user.id}"}
+            headers={"Authorization": f"Bearer {test_user.id}"},
         )
         assert response.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_success(client, test_user, test_task):
+async def test_list_tasks_success(
+    client: TestClient, test_user: UserProfile, test_task: Task
+) -> None:
     """Testa listagem de tarefas com sucesso."""
     with patch.object(
         TaskService, "list_tasks", new_callable=AsyncMock
     ) as mock_list_tasks:
         mock_list_tasks.return_value = [test_task]
         response = client.get(
-            "/api/tasks/",
-            headers={"Authorization": f"Bearer {test_user.id}"}
+            "/api/tasks/", headers={"Authorization": f"Bearer {test_user.id}"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -88,7 +97,9 @@ async def test_list_tasks_success(client, test_user, test_task):
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_with_filter(client, test_user, test_task):
+async def test_list_tasks_with_filter(
+    client: TestClient, test_user: UserProfile, test_task: Task
+) -> None:
     """Testa listagem de tarefas com filtro de status."""
     with patch.object(
         TaskService, "list_tasks", new_callable=AsyncMock
@@ -96,7 +107,7 @@ async def test_list_tasks_with_filter(client, test_user, test_task):
         mock_list_tasks.return_value = [test_task]
         response = client.get(
             "/api/tasks/?status=pending",
-            headers={"Authorization": f"Bearer {test_user.id}"}
+            headers={"Authorization": f"Bearer {test_user.id}"},
         )
         assert response.status_code == 200
         data = response.json()
@@ -105,12 +116,11 @@ async def test_list_tasks_with_filter(client, test_user, test_task):
 
 
 @pytest.mark.asyncio
-async def test_update_task_success(client, test_user, test_task):
+async def test_update_task_success(
+    client: TestClient, test_user: UserProfile, test_task: Task
+) -> None:
     """Testa atualização de tarefa com sucesso."""
-    update_data = {
-        "title": "Updated Title",
-        "status": TaskStatus.COMPLETED.value
-    }
+    update_data = {"title": "Updated Title", "status": TaskStatus.COMPLETED.value}
     with patch.object(
         TaskService, "update_task", new_callable=AsyncMock
     ) as mock_update_task:
@@ -119,7 +129,7 @@ async def test_update_task_success(client, test_user, test_task):
         response = client.put(
             f"/api/tasks/{test_task.id}",
             headers={"Authorization": f"Bearer {test_user.id}"},
-            json=update_data
+            json=update_data,
         )
         assert response.status_code == 200
         data = response.json()
@@ -128,7 +138,9 @@ async def test_update_task_success(client, test_user, test_task):
 
 
 @pytest.mark.asyncio
-async def test_delete_task_success(client, test_user, test_task):
+async def test_delete_task_success(
+    client: TestClient, test_user: UserProfile, test_task: Task
+) -> None:
     """Testa deleção de tarefa com sucesso."""
     with patch.object(
         TaskService, "delete_task", new_callable=AsyncMock
@@ -136,8 +148,8 @@ async def test_delete_task_success(client, test_user, test_task):
         mock_delete_task.return_value = True
         response = client.delete(
             f"/api/tasks/{test_task.id}",
-            headers={"Authorization": f"Bearer {test_user.id}"}
+            headers={"Authorization": f"Bearer {test_user.id}"},
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["message"] == "Tarefa deletada com sucesso" 
+        assert data["message"] == "Tarefa deletada com sucesso"

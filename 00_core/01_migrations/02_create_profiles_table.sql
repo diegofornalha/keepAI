@@ -1,7 +1,7 @@
 BEGIN;
 
 -- Tabela de perfis (users)
-CREATE TABLE users.profiles (
+CREATE TABLE public.profiles (
     id uuid REFERENCES auth.users PRIMARY KEY,
     username text,
     first_name text,
@@ -13,7 +13,7 @@ CREATE TABLE users.profiles (
 );
 
 -- Função de timestamp
-CREATE OR REPLACE FUNCTION users.update_updated_at_column()
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = now();
@@ -23,24 +23,24 @@ $$ language 'plpgsql';
 
 -- Trigger de timestamp
 CREATE TRIGGER update_profiles_updated_at
-    BEFORE UPDATE ON users.profiles
+    BEFORE UPDATE ON public.profiles
     FOR EACH ROW
-    EXECUTE PROCEDURE users.update_updated_at_column();
+    EXECUTE PROCEDURE public.update_updated_at_column();
 
 -- RLS para profiles
-ALTER TABLE users.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para profiles
 CREATE POLICY "Usuários podem visualizar seu próprio perfil" 
-    ON users.profiles FOR SELECT 
+    ON public.profiles FOR SELECT 
     USING (auth.uid() = id);
 
 CREATE POLICY "Usuários podem atualizar seu próprio perfil" 
-    ON users.profiles FOR UPDATE 
+    ON public.profiles FOR UPDATE 
     USING (auth.uid() = id);
 
 CREATE POLICY "Usuários podem inserir seu próprio perfil" 
-    ON users.profiles FOR INSERT 
+    ON public.profiles FOR INSERT 
     WITH CHECK (auth.uid() = id);
 
 COMMIT;

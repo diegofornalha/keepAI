@@ -17,6 +17,7 @@ class UserService:
                 .select("*")
                 .eq("id", str(user_id))
                 .single()
+                .execute()
             )
             if response.data:
                 return UserProfile.model_validate(response.data)

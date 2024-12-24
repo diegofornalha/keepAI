@@ -1,1 +1,1 @@
-"""Pacote de testes da aplicação.""" 
+"""Pacote de testes da aplicação."""

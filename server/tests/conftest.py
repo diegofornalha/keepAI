@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from server.run import app
 from server.models.user import UserProfile
@@ -8,13 +8,15 @@ from server.models.note import Note, NoteCreate
 from server.models.task import Task, TaskCreate, TaskStatus, TaskPriority
 from server.models.conversation import Conversation, ConversationCreate
 
+
 @pytest.fixture
-def client():
+def client() -> TestClient:
     """Cliente de teste para a API."""
     return TestClient(app)
 
+
 @pytest.fixture
-def test_user():
+def test_user() -> UserProfile:
     """Usuário de teste."""
     return UserProfile(
         id=uuid4(),
@@ -23,11 +25,12 @@ def test_user():
         first_name="Test",
         last_name="User",
         created_at="2024-01-01T00:00:00Z",
-        updated_at="2024-01-01T00:00:00Z"
+        updated_at="2024-01-01T00:00:00Z",
     )
 
+
 @pytest.fixture
-def test_note():
+def test_note() -> Note:
     """Nota de teste."""
     return Note(
         id=uuid4(),
@@ -35,19 +38,18 @@ def test_note():
         title="Test Note",
         content="Test content",
         created_at="2024-01-01T00:00:00Z",
-        updated_at="2024-01-01T00:00:00Z"
+        updated_at="2024-01-01T00:00:00Z",
     )
 
+
 @pytest.fixture
-def test_note_create():
+def test_note_create() -> NoteCreate:
     """Dados para criar nota de teste."""
-    return NoteCreate(
-        title="New Test Note",
-        content="New test content"
-    )
+    return NoteCreate(title="New Test Note", content="New test content")
+
 
 @pytest.fixture
-def test_task():
+def test_task() -> Task:
     """Tarefa de teste."""
     return Task(
         id=uuid4(),
@@ -57,20 +59,22 @@ def test_task():
         status=TaskStatus.PENDING,
         priority=TaskPriority.MEDIUM,
         created_at="2024-01-01T00:00:00Z",
-        updated_at="2024-01-01T00:00:00Z"
+        updated_at="2024-01-01T00:00:00Z",
     )
 
+
 @pytest.fixture
-def test_task_create():
+def test_task_create() -> TaskCreate:
     """Dados para criar tarefa de teste."""
     return TaskCreate(
         title="New Test Task",
         description="New test description",
-        priority=TaskPriority.HIGH
+        priority=TaskPriority.HIGH,
     )
 
+
 @pytest.fixture
-def test_conversation():
+def test_conversation() -> Conversation:
     """Conversa de teste."""
     return Conversation(
         id=uuid4(),
@@ -78,12 +82,11 @@ def test_conversation():
         message="Test message",
         response="Test response",
         created_at="2024-01-01T00:00:00Z",
-        model_used="gemini-pro"
+        model_used="gemini-pro",
     )
 
+
 @pytest.fixture
-def test_conversation_create():
+def test_conversation_create() -> ConversationCreate:
     """Dados para criar conversa de teste."""
-    return ConversationCreate(
-        message="New test message"
-    ) 
+    return ConversationCreate(message="New test message")

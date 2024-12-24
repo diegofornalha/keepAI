@@ -1,16 +1,16 @@
-"""Ponto de entrada da aplicação Flask."""
+"""Ponto de entrada da aplicação FastAPI."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from config.settings import (
+from server.config.settings import (
     APP_NAME,
     APP_VERSION,
     CORS_ORIGINS,
     CORS_METHODS,
     CORS_HEADERS,
 )
-from routes.api import api_router
+from server.routes.api import api_router
 
 # Cria a aplicação FastAPI
 app = FastAPI(

@@ -19,6 +19,9 @@ async def get_current_user(user_id: UUID = Depends(security)) -> UserProfile:
         if not profile:
             raise HTTPException(status_code=404, detail="Perfil não encontrado")
         return profile
+    except HTTPException as e:
+        logger.error(f"Erro ao buscar perfil: {e.detail}")
+        raise
     except Exception as e:
         logger.error(f"Erro ao buscar perfil: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -34,6 +37,9 @@ async def update_current_user(
         if not profile:
             raise HTTPException(status_code=404, detail="Perfil não encontrado")
         return profile
+    except HTTPException as e:
+        logger.error(f"Erro ao atualizar perfil: {e.detail}")
+        raise
     except Exception as e:
         logger.error(f"Erro ao atualizar perfil: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
