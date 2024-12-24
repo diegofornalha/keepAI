@@ -1,59 +1,47 @@
 from typing import List
-from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBearer
-
+from fastapi import APIRouter, HTTPException
 from models.conversation import Conversation, ConversationCreate
 from services.ai_service import AIService
-from config.logging_config import logger
 
-router = APIRouter(prefix="/ai", tags=["ai"])
-security = HTTPBearer()
-
-
-@router.post("/chat", response_model=Conversation)
-async def create_chat(
-    conversation_data: ConversationCreate, user_id: UUID = Depends(security)
-) -> Conversation:
-    """Cria uma nova conversa com a IA."""
-    try:
-        conversation = await AIService.create_conversation(
-            str(user_id), conversation_data
-        )
-        if not conversation:
-            raise HTTPException(status_code=400, detail="Erro ao criar conversa")
-        return conversation
-    except HTTPException as e:
-        logger.error(f"Erro ao criar conversa: {e.detail}")
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao criar conversa: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+router = APIRouter()
+service = AIService()
 
 
 @router.get("/conversations", response_model=List[Conversation])
-async def list_conversations(user_id: UUID = Depends(security)) -> List[Conversation]:
-    """Lista todas as conversas do usuário."""
-    try:
-        return await AIService.list_conversations(str(user_id))  # type: ignore
-    except Exception as e:
-        logger.error(f"Erro ao listar conversas: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+async def list_conversations() -> List[Conversation]:
+    return await service.list_conversations()
 
 
 @router.get("/conversations/{conversation_id}", response_model=Conversation)
-async def get_conversation(
-    conversation_id: UUID, user_id: UUID = Depends(security)
+async def get_conversation(conversation_id: str) -> Conversation:
+    conversation = await service.get_conversation(conversation_id)
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return conversation
+
+
+@router.post("/conversations", response_model=Conversation)
+async def create_conversation(conversation: ConversationCreate) -> Conversation:
+    result = await service.create_conversation(conversation.model_dump())
+    if not result:
+        raise HTTPException(status_code=400, detail="Could not create conversation")
+    return result
+
+
+@router.put("/conversations/{conversation_id}", response_model=Conversation)
+async def update_conversation(
+    conversation_id: str, conversation: ConversationCreate
 ) -> Conversation:
-    """Busca uma conversa específica."""
-    try:
-        conversation = await AIService.get_conversation(conversation_id, str(user_id))
-        if not conversation:
-            raise HTTPException(status_code=404, detail="Conversa não encontrada")
-        return conversation
-    except HTTPException as e:
-        logger.error(f"Erro ao buscar conversa: {e.detail}")
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao buscar conversa: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    result = await service.update_conversation(
+        conversation_id, conversation.model_dump()
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return result
+
+
+@router.delete("/conversations/{conversation_id}")
+async def delete_conversation(conversation_id: str) -> bool:
+    if not await service.delete_conversation(conversation_id):
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return True

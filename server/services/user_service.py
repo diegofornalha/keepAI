@@ -1,71 +1,25 @@
-from typing import Optional, List
-from uuid import UUID
-
+from typing import List, Optional, Dict, Any
 from models.user import UserProfile
-from config.database import supabase_client
+from config.database import SupabaseWrapper
 
 
 class UserService:
-    """Serviço para gerenciamento de usuários."""
+    def __init__(self) -> None:
+        self.db = SupabaseWrapper[UserProfile](UserProfile, "user_profiles")
 
-    @staticmethod
-    async def get_profile(user_id: UUID) -> Optional[UserProfile]:
-        """Busca o perfil de um usuário."""
-        try:
-            response = (
-                await supabase_client.table("profiles")
-                .select("*")
-                .eq("id", str(user_id))
-                .single()
-                .execute()
-            )
-            if response.data:
-                return UserProfile.model_validate(response.data)
-            return None
-        except Exception as e:
-            print(f"Erro ao buscar perfil: {e}")
-            return None
+    async def list_users(self) -> List[UserProfile]:
+        return await self.db.select()
 
-    @staticmethod
-    async def update_profile(
-        user_id: UUID, profile_data: dict
+    async def get_user(self, user_id: str) -> Optional[UserProfile]:
+        return await self.db.get_by_id(user_id)
+
+    async def create_user(self, user_data: Dict[str, Any]) -> Optional[UserProfile]:
+        return await self.db.insert(user_data)
+
+    async def update_user(
+        self, user_id: str, user_data: Dict[str, Any]
     ) -> Optional[UserProfile]:
-        """Atualiza o perfil de um usuário."""
-        try:
-            response = (
-                await supabase_client.table("profiles")
-                .update(profile_data)
-                .eq("id", str(user_id))
-                .execute()
-            )
-            if response.data:
-                return UserProfile.model_validate(response.data[0])
-            return None
-        except Exception as e:
-            print(f"Erro ao atualizar perfil: {e}")
-            return None
+        return await self.db.update(user_id, user_data)
 
-    @staticmethod
-    async def list_profiles() -> List[UserProfile]:
-        """Lista todos os perfis."""
-        try:
-            response = await supabase_client.table("profiles").select("*").execute()
-            return [UserProfile.model_validate(profile) for profile in response.data]
-        except Exception as e:
-            print(f"Erro ao listar perfis: {e}")
-            return []
-
-    @staticmethod
-    async def delete_profile(user_id: UUID) -> bool:
-        """Deleta um perfil."""
-        try:
-            response = (
-                await supabase_client.table("profiles")
-                .delete()
-                .eq("id", str(user_id))
-                .execute()
-            )
-            return bool(response.data)
-        except Exception as e:
-            print(f"Erro ao deletar perfil: {e}")
-            return False
+    async def delete_user(self, user_id: str) -> bool:
+        return await self.db.delete(user_id)

@@ -1,55 +1,43 @@
 from typing import List
-from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBearer
-
-from models.user import UserProfile
+from fastapi import APIRouter, HTTPException
+from models.user import UserProfile, UserProfileCreate, UserProfileUpdate
 from services.user_service import UserService
-from config.logging_config import logger
 
-router = APIRouter(prefix="/users", tags=["users"])
-security = HTTPBearer()
-
-
-@router.get("/me", response_model=UserProfile)
-async def get_current_user(user_id: UUID = Depends(security)) -> UserProfile:
-    """Retorna o perfil do usuário atual."""
-    try:
-        profile = await UserService.get_profile(user_id)
-        if not profile:
-            raise HTTPException(status_code=404, detail="Perfil não encontrado")
-        return profile
-    except HTTPException as e:
-        logger.error(f"Erro ao buscar perfil: {e.detail}")
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao buscar perfil: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+router = APIRouter()
+service = UserService()
 
 
-@router.put("/me", response_model=UserProfile)
-async def update_current_user(
-    profile_data: dict, user_id: UUID = Depends(security)
-) -> UserProfile:
-    """Atualiza o perfil do usuário atual."""
-    try:
-        profile = await UserService.update_profile(user_id, profile_data)
-        if not profile:
-            raise HTTPException(status_code=404, detail="Perfil não encontrado")
-        return profile
-    except HTTPException as e:
-        logger.error(f"Erro ao atualizar perfil: {e.detail}")
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao atualizar perfil: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+@router.get("/profiles", response_model=List[UserProfile])
+async def list_profiles() -> List[UserProfile]:
+    return await service.list_users()
 
 
-@router.get("/", response_model=List[UserProfile])
-async def list_users() -> List[UserProfile]:
-    """Lista todos os usuários (apenas para admin)."""
-    try:
-        return await UserService.list_profiles()  # type: ignore
-    except Exception as e:
-        logger.error(f"Erro ao listar perfis: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+@router.get("/profiles/{user_id}", response_model=UserProfile)
+async def get_profile(user_id: str) -> UserProfile:
+    profile = await service.get_user(user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return profile
+
+
+@router.post("/profiles", response_model=UserProfile)
+async def create_profile(profile: UserProfileCreate) -> UserProfile:
+    result = await service.create_user(profile.model_dump())
+    if not result:
+        raise HTTPException(status_code=400, detail="Could not create profile")
+    return result
+
+
+@router.put("/profiles/{user_id}", response_model=UserProfile)
+async def update_profile(user_id: str, profile: UserProfileUpdate) -> UserProfile:
+    result = await service.update_user(user_id, profile.model_dump(exclude_unset=True))
+    if not result:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return result
+
+
+@router.delete("/profiles/{user_id}")
+async def delete_profile(user_id: str) -> bool:
+    if not await service.delete_user(user_id):
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return True

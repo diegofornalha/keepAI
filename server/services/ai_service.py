@@ -1,83 +1,27 @@
-from typing import Optional, List
-from uuid import UUID
-
-from models.conversation import Conversation, ConversationCreate
-from config.database import supabase_client
+from typing import List, Optional, Dict, Any
+from models.conversation import Conversation
+from config.database import SupabaseWrapper
 
 
 class AIService:
-    """Serviço para gerenciamento de conversas com IA."""
+    def __init__(self) -> None:
+        self.db = SupabaseWrapper[Conversation](Conversation, "conversations")
 
-    @staticmethod
+    async def list_conversations(self) -> List[Conversation]:
+        return await self.db.select()
+
+    async def get_conversation(self, conversation_id: str) -> Optional[Conversation]:
+        return await self.db.get_by_id(conversation_id)
+
     async def create_conversation(
-        user_id: str, conversation_data: ConversationCreate
+        self, conversation_data: Dict[str, Any]
     ) -> Optional[Conversation]:
-        """Cria uma nova conversa."""
-        try:
-            data = {
-                "user_id": user_id,
-                "message": conversation_data.message,
-                "model_used": conversation_data.model_used,
-                "metadata": conversation_data.metadata,
-            }
-            response = (
-                await supabase_client.table("conversations").insert(data).execute()
-            )
-            if response.data:
-                return Conversation.model_validate(response.data[0])
-            return None
-        except Exception as e:
-            print(f"Erro ao criar conversa: {e}")
-            return None
+        return await self.db.insert(conversation_data)
 
-    @staticmethod
-    async def get_conversation(
-        conversation_id: UUID, user_id: str
+    async def update_conversation(
+        self, conversation_id: str, conversation_data: Dict[str, Any]
     ) -> Optional[Conversation]:
-        """Busca uma conversa específica."""
-        try:
-            response = (
-                await supabase_client.table("conversations")
-                .select("*")
-                .eq("id", str(conversation_id))
-                .eq("user_id", user_id)
-                .single()
-                .execute()
-            )
-            if response.data:
-                return Conversation.model_validate(response.data)
-            return None
-        except Exception as e:
-            print(f"Erro ao buscar conversa: {e}")
-            return None
+        return await self.db.update(conversation_id, conversation_data)
 
-    @staticmethod
-    async def list_conversations(user_id: str) -> List[Conversation]:
-        """Lista todas as conversas do usuário."""
-        try:
-            response = (
-                await supabase_client.table("conversations")
-                .select("*")
-                .eq("user_id", user_id)
-                .execute()
-            )
-            return [Conversation.model_validate(conv) for conv in response.data]
-        except Exception as e:
-            print(f"Erro ao listar conversas: {e}")
-            return []
-
-    @staticmethod
-    async def delete_conversation(conversation_id: UUID, user_id: str) -> bool:
-        """Deleta uma conversa."""
-        try:
-            response = (
-                await supabase_client.table("conversations")
-                .delete()
-                .eq("id", str(conversation_id))
-                .eq("user_id", user_id)
-                .execute()
-            )
-            return bool(response.data)
-        except Exception as e:
-            print(f"Erro ao deletar conversa: {e}")
-            return False
+    async def delete_conversation(self, conversation_id: str) -> bool:
+        return await self.db.delete(conversation_id)

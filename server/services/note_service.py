@@ -1,96 +1,25 @@
-from typing import Optional, List
-from uuid import UUID
-
-from models.note import Note, NoteCreate, NoteUpdate
-from config.database import supabase_client
+from typing import List, Optional, Dict, Any
+from models.note import Note
+from config.database import SupabaseWrapper
 
 
 class NoteService:
-    """Serviço para gerenciamento de notas."""
+    def __init__(self) -> None:
+        self.db = SupabaseWrapper[Note](Note, "notes")
 
-    @staticmethod
-    async def create_note(user_id: str, note_data: NoteCreate) -> Optional[Note]:
-        """Cria uma nova nota."""
-        try:
-            data = {
-                "user_id": user_id,
-                "title": note_data.title,
-                "content": note_data.content,
-            }
-            response = await supabase_client.table("notes").insert(data).execute()
-            if response.data:
-                return Note.model_validate(response.data[0])
-            return None
-        except Exception as e:
-            print(f"Erro ao criar nota: {e}")
-            return None
+    async def list_notes(self) -> List[Note]:
+        return await self.db.select()
 
-    @staticmethod
-    async def get_note(note_id: UUID, user_id: str) -> Optional[Note]:
-        """Busca uma nota específica."""
-        try:
-            response = (
-                await supabase_client.table("notes")
-                .select("*")
-                .eq("id", str(note_id))
-                .eq("user_id", user_id)
-                .single()
-                .execute()
-            )
-            if response.data:
-                return Note.model_validate(response.data)
-            return None
-        except Exception as e:
-            print(f"Erro ao buscar nota: {e}")
-            return None
+    async def get_note(self, note_id: str) -> Optional[Note]:
+        return await self.db.get_by_id(note_id)
 
-    @staticmethod
-    async def list_notes(user_id: str) -> List[Note]:
-        """Lista todas as notas do usuário."""
-        try:
-            response = (
-                await supabase_client.table("notes")
-                .select("*")
-                .eq("user_id", user_id)
-                .execute()
-            )
-            return [Note.model_validate(note) for note in response.data]
-        except Exception as e:
-            print(f"Erro ao listar notas: {e}")
-            return []
+    async def create_note(self, note_data: Dict[str, Any]) -> Optional[Note]:
+        return await self.db.insert(note_data)
 
-    @staticmethod
     async def update_note(
-        note_id: UUID, user_id: str, note_data: NoteUpdate
+        self, note_id: str, note_data: Dict[str, Any]
     ) -> Optional[Note]:
-        """Atualiza uma nota."""
-        try:
-            response = (
-                await supabase_client.table("notes")
-                .update(note_data.model_dump(exclude_unset=True))
-                .eq("id", str(note_id))
-                .eq("user_id", user_id)
-                .execute()
-            )
-            if response.data:
-                return Note.model_validate(response.data[0])
-            return None
-        except Exception as e:
-            print(f"Erro ao atualizar nota: {e}")
-            return None
+        return await self.db.update(note_id, note_data)
 
-    @staticmethod
-    async def delete_note(note_id: UUID, user_id: str) -> bool:
-        """Deleta uma nota."""
-        try:
-            response = (
-                await supabase_client.table("notes")
-                .delete()
-                .eq("id", str(note_id))
-                .eq("user_id", user_id)
-                .execute()
-            )
-            return bool(response.data)
-        except Exception as e:
-            print(f"Erro ao deletar nota: {e}")
-            return False
+    async def delete_note(self, note_id: str) -> bool:
+        return await self.db.delete(note_id)
