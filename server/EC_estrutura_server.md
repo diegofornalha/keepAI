@@ -1,11 +1,29 @@
 ## EC_estrutura_server.md
 
 ```
-/KeepAI/03_server
+/KeepAI/server
 ├── config/                     # Configurações da aplicação
 │   ├── __init__.py
 │   ├── settings.py            # Configurações gerais
 │   └── logging_config.py      # Configuração de logs
+│
+├── models/                     # Modelos de dados
+│   ├── __init__.py
+│   ├── user.py
+│   ├── note.py
+│   └── task.py
+│
+├── routes/                     # Rotas da API
+│   ├── __init__.py
+│   ├── auth.py
+│   ├── notes.py
+│   └── tasks.py
+│
+├── services/                   # Camada de serviços
+│   ├── __init__.py
+│   ├── auth_service.py
+│   ├── note_service.py
+│   └── task_service.py
 │
 ├── modules/                    # Módulos principais
 │   ├── __init__.py
@@ -20,13 +38,7 @@
 │   │   ├── routes.py
 │   │   └── services.py
 │   │
-│   ├── tasks/                 # Gerenciamento de tarefas
-│   │   ├── __init__.py
-│   │   ├── models.py
-│   │   ├── routes.py
-│   │   └── services.py
-│   │
-│   └── calendar/              # Gerenciamento de calendário
+│   └── tasks/                 # Gerenciamento de tarefas
 │       ├── __init__.py
 │       ├── models.py
 │       ├── routes.py
@@ -50,21 +62,15 @@
 │   ├── base.html
 │   ├── auth/
 │   ├── notes/
-│   ├── tasks/
-│   └── calendar/
-│
-├── tests/                     # Testes
-│   ├── __init__.py
-│   ├── conftest.py
-│   └── test_*.py
+│   └── tasks/
 │
 ├── utils/                     # Utilitários gerais
 │   ├── __init__.py
 │   ├── decorators.py
 │   └── helpers.py
 │
-├── __init__.py
-├── app.py                     # Aplicação principal
-└── wsgi.py                    # Entrada WSGI
+├── __init__.py               # Inicialização do pacote
+├── run.py                    # Script para executar o servidor
+└── wsgi.py                   # Entrada WSGI
 
 ```
