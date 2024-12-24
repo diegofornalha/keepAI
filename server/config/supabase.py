@@ -1,4 +1,5 @@
 """Configuração do cliente Supabase."""
+
 from typing import Optional
 from supabase import create_client, Client
 from server.config.settings import settings

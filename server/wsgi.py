@@ -1,3 +1,6 @@
-from server.app import create_app
+"""Arquivo WSGI para servir a aplicação em produção."""
 
-app = create_app()
+from server.config.flask_app import app
+
+if __name__ == "__main__":
+    app.run()

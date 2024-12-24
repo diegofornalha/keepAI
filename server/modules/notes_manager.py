@@ -1,4 +1,5 @@
 """Gerenciador de notas usando Supabase."""
+
 from typing import Dict, Any, List, Optional
 from supabase import Client
 from server.config.supabase import get_supabase_client
@@ -90,7 +91,8 @@ class NotesManager:
             query: Texto para buscar nas notas (opcional)
 
         Returns:
-            List[Dict[str, Any]]: Lista de notas encontradas
+            List[Dict[str, Any]]: Lista de notas encontradas.
+                                 Retorna lista vazia em caso de erro.
         """
         try:
             if query:
@@ -104,7 +106,9 @@ class NotesManager:
             else:
                 response = self.client.table("notes").select("*").execute()
 
-            return response.data
+            # Converte os resultados para dicionários
+            notes = [dict(note) for note in response.data]  # type: ignore
+            return notes
         except Exception as e:
             logger.error(f"Erro ao buscar notas: {str(e)}")
             return []
