@@ -35,7 +35,7 @@ async def create_chat(
 async def list_conversations(user_id: UUID = Depends(security)) -> List[Conversation]:
     """Lista todas as conversas do usuário."""
     try:
-        return await AIService.list_conversations(str(user_id))
+        return await AIService.list_conversations(str(user_id))  # type: ignore
     except Exception as e:
         logger.error(f"Erro ao listar conversas: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")

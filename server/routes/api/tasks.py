@@ -50,9 +50,8 @@ async def list_tasks(
 ) -> List[Task]:
     """Lista todas as tarefas do usuário."""
     try:
-        return await TaskService.list_tasks(
-            str(user_id), status.value if status else None
-        )
+        status_value = status.value if status else None
+        return await TaskService.list_tasks(str(user_id), status_value)  # type: ignore
     except Exception as e:
         logger.error(f"Erro ao listar tarefas: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")

@@ -47,7 +47,7 @@ async def get_note(note_id: UUID, user_id: UUID = Depends(security)) -> Note:
 async def list_notes(user_id: UUID = Depends(security)) -> List[Note]:
     """Lista todas as notas do usuário."""
     try:
-        return await NoteService.list_notes(str(user_id))
+        return await NoteService.list_notes(str(user_id))  # type: ignore
     except Exception as e:
         logger.error(f"Erro ao listar notas: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")

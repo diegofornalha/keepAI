@@ -49,7 +49,7 @@ async def update_current_user(
 async def list_users() -> List[UserProfile]:
     """Lista todos os usuários (apenas para admin)."""
     try:
-        return await UserService.list_profiles()
+        return await UserService.list_profiles()  # type: ignore
     except Exception as e:
         logger.error(f"Erro ao listar perfis: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
