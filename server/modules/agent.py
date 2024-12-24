@@ -34,14 +34,30 @@ class KeepAIAgent:
                 max_output_tokens=settings.GEMINI_CONFIG["max_output_tokens"],
             )
 
+            # Mapeamento dos níveis de segurança do Gemini
             safety_settings = [
                 {
-                    "category": category,
-                    "threshold": threshold,
-                }
-                for category, threshold in settings.GEMINI_CONFIG[
-                    "safety_settings"
-                ].items()
+                    "category": int(glm.HarmCategory.HARM_CATEGORY_HARASSMENT.value),
+                    "threshold": int(glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE.value),
+                },
+                {
+                    "category": int(glm.HarmCategory.HARM_CATEGORY_HATE_SPEECH.value),
+                    "threshold": int(glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE.value),
+                },
+                {
+                    "category": int(
+                        glm.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT.value
+                    ),
+                    "threshold": int(
+                        glm.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE.value
+                    ),
+                },
+                {
+                    "category": int(
+                        glm.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT.value
+                    ),
+                    "threshold": int(glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE.value),
+                },
             ]
 
             self.llm = ChatGoogleGenerativeAI(
