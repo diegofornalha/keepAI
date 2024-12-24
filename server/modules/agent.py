@@ -6,7 +6,7 @@ from langchain.prompts import PromptTemplate
 from server.config.settings import settings
 from server.modules.notes_manager import NotesManager
 import logging
-from google.generativeai import configure, GenerativeModel
+from google.generativeai import configure
 from google.ai import generativelanguage as glm
 
 logger = logging.getLogger(__name__)
@@ -21,41 +21,35 @@ class KeepAIAgent:
             logger.error("GEMINI_API_KEY não está configurada no ambiente")
             raise RuntimeError(
                 "GEMINI_API_KEY não está configurada. "
-                "Configure a variável de ambiente GEMINI_API_KEY"
+                "Configure a variável de ambiente GOOGLE_API_KEY"
             )
 
         try:
             configure(api_key=settings.GEMINI_API_KEY)
-            model = GenerativeModel(
-                model_name="gemini-pro",
-                generation_config=glm.GenerationConfig(
-                    temperature=0.7,
-                    top_p=0.8,
-                    top_k=40,
-                    max_output_tokens=2048,
-                ),
-                safety_settings=[
-                    {
-                        "category": "HARM_CATEGORY_HARASSMENT",
-                        "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-                    },
-                    {
-                        "category": "HARM_CATEGORY_HATE_SPEECH",
-                        "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-                    },
-                    {
-                        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-                    },
-                    {
-                        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                        "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-                    },
-                ],
+
+            generation_config = glm.GenerationConfig(
+                temperature=settings.GEMINI_CONFIG["temperature"],
+                top_p=settings.GEMINI_CONFIG["top_p"],
+                top_k=settings.GEMINI_CONFIG["top_k"],
+                max_output_tokens=settings.GEMINI_CONFIG["max_output_tokens"],
             )
+
+            safety_settings = [
+                {
+                    "category": category,
+                    "threshold": threshold,
+                }
+                for category, threshold in settings.GEMINI_CONFIG[
+                    "safety_settings"
+                ].items()
+            ]
+
             self.llm = ChatGoogleGenerativeAI(
-                model=model,
+                model=settings.GEMINI_CONFIG["model"],
                 convert_system_message_to_human=True,
+                google_api_key=settings.GEMINI_API_KEY,
+                generation_config=generation_config,
+                safety_settings=safety_settings,
             )
             logger.info("Agente KeepAI inicializado com sucesso")
         except Exception as e:
