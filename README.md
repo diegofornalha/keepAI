@@ -16,20 +16,23 @@ KeepAI é um aplicativo web moderno para gerenciamento de notas, tarefas e calen
 O KeepAI segue uma arquitetura modular e limpa:
 
 - **API RESTful**: Interface clara e bem definida para todas as operações
-- **Autenticação**: Gerenciamento seguro via Clerk
+- **Autenticação**: Opção de autenticação com Clerk
 - **Banco de Dados**: Persistência eficiente com Supabase
-- **Frontend**: Interface responsiva e moderna
+- **Frontend**: Interface feita no flask
+- **IA**: Integração otimizada com Google Gemini
 
 ## Tecnologias
 
 - **Backend**:
 
   - Python 3.11
-  - Flask (Framework Web)
+  - Flask (Framework em Python)
   - Supabase (Banco de Dados)
   - Clerk (Autenticação)
   - JWT (Tokens de Acesso)
   - Gunicorn (Servidor WSGI)
+  - Google Gemini (IA)
+  - LangChain (Framework de IA)
 
 - **Frontend**:
   - Jinja2 Templates
@@ -129,3 +132,15 @@ keepai/
 ## Licença
 
 Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## Configuração do Gemini
+
+O projeto utiliza o Google Gemini Pro com as seguintes configurações otimizadas:
+
+- Modelo: gemini-pro
+- Temperatura: 0.7
+- Max Output Tokens: 2048
+- Top P: 0.8
+- Top K: 40
+
+Estas configurações foram ajustadas para fornecer um equilíbrio ideal entre criatividade e precisão nas respostas.

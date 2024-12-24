@@ -15,23 +15,33 @@ def process_chat_message(message: str) -> str:
         A resposta do agente.
     """
     try:
-        # Adiciona o contexto do sistema à mensagem
-        system_prompt = """Você é um assistente IA amigável e prestativo do KeepAI.
-        Você deve:
-        1. Responder em português do Brasil
-        2. Ser conciso e direto
-        3. Usar emojis ocasionalmente para tornar a conversa mais amigável
-        4. Formatar código usando blocos de código Markdown (```)
-        5. Ajudar com tarefas de produtividade, organização e programação
-        """
-
-        full_message = f"{system_prompt}\n\nUsuário: {message}"
-
         # Usa o agente para processar a mensagem
-        response = agent.get_agent().run(full_message)
+        response = agent.get_agent().invoke({"input": message})
+
+        # Verifica se a resposta é válida
+        if not response or not isinstance(response, (str, dict)):
+            raise ValueError("Resposta inválida do agente")
+
+        # Extrai a resposta do resultado
+        if isinstance(response, dict):
+            response = response.get("output", "")
+
         return str(response)
 
-    except (ValueError, RuntimeError, Exception) as error:
-        raise ValueError(
-            "Não foi possível processar sua mensagem. Por favor, tente novamente."
-        ) from error
+    except Exception as error:
+        error_msg = str(error)
+        if "safety" in error_msg.lower():
+            return (
+                "Desculpe, não posso processar esse tipo de conteúdo "
+                "por questões de segurança. 🚫"
+            )
+        elif "quota" in error_msg.lower() or "rate" in error_msg.lower():
+            return (
+                "Desculpe, estou temporariamente indisponível devido a limites de uso. "
+                "Por favor, tente novamente em alguns minutos. ⏳"
+            )
+        else:
+            return (
+                "Desculpe, ocorreu um erro ao processar sua mensagem. "
+                "Por favor, tente novamente ou reformule sua pergunta. 🔄"
+            )

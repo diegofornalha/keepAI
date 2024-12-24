@@ -2,14 +2,15 @@ from datetime import datetime
 from flask import Flask
 from flask_cors import CORS
 from server.routes import register_routes
-from server.config import Config
+from server.config.settings import settings
 from server.routes.auth import get_current_user
 from typing import Any, Dict
 
 
-def create_app(config_class: type = Config) -> Flask:
+def create_app() -> Flask:
+    """Cria e configura a aplicação Flask"""
     app = Flask(__name__)
-    app.config.from_object(config_class)
+    app.config.from_object(settings)
 
     # Inicializar extensões
     CORS(app)
