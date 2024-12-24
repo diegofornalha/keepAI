@@ -1,86 +1,66 @@
-from typing import Optional
 import os
-from dataclasses import dataclass
-from supabase import create_client, Client
-import logging
+from pathlib import Path
 from dotenv import load_dotenv
 
-# Carregar variáveis de ambiente do arquivo .env
+# Carrega variáveis de ambiente
 load_dotenv()
 
-# Configuração do logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("app.log"),
-    ],
-)
+# Diretório base
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-logger = logging.getLogger(__name__)
+# Configurações da aplicação
+APP_NAME = "KeepAI"
+APP_VERSION = "1.0.0"
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
+# Configurações de segurança
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("A variável de ambiente SECRET_KEY deve estar definida")
 
-@dataclass
-class Settings:
-    """Configurações do projeto"""
+# Configurações do Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-    _PROJECT_NAME: str = "KeepAI"
-    _VERSION: str = "0.1.0"
-    _SUPABASE_URL: Optional[str] = os.getenv("SUPABASE_URL")
-    _SUPABASE_KEY: Optional[str] = os.getenv("SUPABASE_KEY")
-    _GEMINI_API_KEY: Optional[str] = os.getenv("GOOGLE_API_KEY")
+# Configurações do Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-    # Configurações do Gemini
-    GEMINI_CONFIG = {
-        "model": "gemini-pro",
-        "temperature": 0.7,
-        "max_output_tokens": 2048,
-        "top_p": 0.8,
-        "top_k": 40,
-        "safety_settings": {
-            "HARM_CATEGORY_HARASSMENT": "BLOCK_MEDIUM_AND_ABOVE",
-            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_MEDIUM_AND_ABOVE",
-            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_MEDIUM_AND_ABOVE",
-            "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_MEDIUM_AND_ABOVE",
-        },
-    }
+# Configurações de logging
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
 
-    def __post_init__(self) -> None:
-        """Validar configurações após inicialização"""
-        if not self._GEMINI_API_KEY:
-            logger.warning("GEMINI_API_KEY não está configurada")
-        if not self._SUPABASE_URL or not self._SUPABASE_KEY:
-            logger.warning("SUPABASE_URL e/ou SUPABASE_KEY não estão configurados")
+# Configurações CORS
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+CORS_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+CORS_HEADERS = ["*"]
 
-    @property
-    def PROJECT_NAME(self) -> str:
-        return self._PROJECT_NAME
+# Configurações de cache
+CACHE_TYPE = os.getenv("CACHE_TYPE", "simple")
+CACHE_REDIS_URL = os.getenv("REDIS_URL")
 
-    @property
-    def VERSION(self) -> str:
-        return self._VERSION
+# Configurações de rate limit
+RATELIMIT_DEFAULT = "100/hour"
+RATELIMIT_STORAGE_URL = CACHE_REDIS_URL
 
-    @property
-    def SUPABASE_URL(self) -> Optional[str]:
-        return self._SUPABASE_URL
-
-    @property
-    def SUPABASE_KEY(self) -> Optional[str]:
-        return self._SUPABASE_KEY
-
-    @property
-    def GEMINI_API_KEY(self) -> Optional[str]:
-        if not self._GEMINI_API_KEY:
-            logger.warning("GEMINI_API_KEY não está configurada")
-        return self._GEMINI_API_KEY
-
-    def get_supabase_client(self) -> Client:
-        """Retorna um cliente Supabase configurado"""
-        if not self._SUPABASE_URL or not self._SUPABASE_KEY:
-            logger.error("SUPABASE_URL e SUPABASE_KEY devem estar configurados")
-            raise ValueError("SUPABASE_URL e SUPABASE_KEY devem estar configurados")
-        return create_client(self._SUPABASE_URL, self._SUPABASE_KEY)
-
-
-settings = Settings()
+# Exporta todas as configurações
+__all__ = [
+    "APP_NAME",
+    "APP_VERSION",
+    "DEBUG",
+    "SECRET_KEY",
+    "SUPABASE_URL",
+    "SUPABASE_KEY",
+    "GEMINI_API_KEY",
+    "LOG_LEVEL",
+    "LOG_FORMAT",
+    "LOG_DIR",
+    "CORS_ORIGINS",
+    "CORS_METHODS",
+    "CORS_HEADERS",
+    "CACHE_TYPE",
+    "CACHE_REDIS_URL",
+    "RATELIMIT_DEFAULT",
+    "RATELIMIT_STORAGE_URL",
+]

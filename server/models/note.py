@@ -1,24 +1,44 @@
-from typing import Dict, Any
+from datetime import datetime
+from typing import Optional
+from uuid import UUID
+from pydantic import BaseModel
 
 
-class Note:
-    def __init__(self, data: Dict[str, Any]) -> None:
-        self.id = data.get("id")
-        self.title = data.get("title")
-        self.content = data.get("content")
-        self.user_id = data.get("user_id")
-        self.created_at = data.get("created_at")
-        self.updated_at = data.get("updated_at")
+class Note(BaseModel):
+    """Modelo para notas."""
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "id": self.id,
-            "title": self.title,
-            "content": self.content,
-            "user_id": self.user_id,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+    id: UUID
+    user_id: str
+    title: str = ""
+    content: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        """Configurações do modelo."""
+
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "user_id": "user_2xABCDEF",
+                "title": "Minha Nota",
+                "content": "Conteúdo da nota...",
+                "created_at": "2023-01-01T00:00:00Z",
+                "updated_at": "2023-01-01T00:00:00Z",
+            }
         }
 
-    def __repr__(self) -> str:
-        return f"<Note {self.title}>"
+
+class NoteCreate(BaseModel):
+    """Modelo para criação de notas."""
+
+    title: str = ""
+    content: str
+
+
+class NoteUpdate(BaseModel):
+    """Modelo para atualização de notas."""
+
+    title: Optional[str] = None
+    content: Optional[str] = None

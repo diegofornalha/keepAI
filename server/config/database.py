@@ -1,12 +1,20 @@
-from supabase import create_client, Client
 import os
+from supabase import create_client, Client
+from dotenv import load_dotenv
 
-supabase_url = os.getenv("SUPABASE_URL")
-supabase_key = os.getenv("SUPABASE_KEY")
+# Carrega variáveis de ambiente
+load_dotenv()
 
-if not supabase_url or not supabase_key:
+# Configuração do Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError(
-        "SUPABASE_URL e SUPABASE_KEY devem ser definidos nas variáveis de ambiente"
+        "As variáveis de ambiente SUPABASE_URL e SUPABASE_KEY devem estar definidas"
     )
 
-supabase: Client = create_client(supabase_url=supabase_url, supabase_key=supabase_key)
+# Cliente do Supabase
+supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+__all__ = ["supabase_client"]
