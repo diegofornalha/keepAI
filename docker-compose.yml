@@ -1,5 +1,8 @@
+name: keepai
+
 services:
   web:
+    container_name: keepai-web
     build: 
       context: .
       dockerfile: Dockerfile
@@ -26,9 +29,16 @@ services:
       # Google Gemini
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     command: flask run --host=0.0.0.0 --port=5001 --reload
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - keepai-network
+
+networks:
+  keepai-network:
+    name: keepai-network

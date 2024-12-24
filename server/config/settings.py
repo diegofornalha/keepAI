@@ -3,7 +3,10 @@ import os
 from dataclasses import dataclass
 from supabase import create_client, Client
 import logging
+from dotenv import load_dotenv
 
+# Carregar variáveis de ambiente do arquivo .env
+load_dotenv()
 
 # Configuração do logging
 logging.basicConfig(
@@ -26,7 +29,7 @@ class Settings:
     _VERSION: str = "0.1.0"
     _SUPABASE_URL: Optional[str] = os.getenv("SUPABASE_URL")
     _SUPABASE_KEY: Optional[str] = os.getenv("SUPABASE_KEY")
-    _GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
+    _GEMINI_API_KEY: Optional[str] = os.getenv("GOOGLE_API_KEY")
 
     # Configurações do Gemini
     GEMINI_CONFIG = {
@@ -41,11 +44,14 @@ class Settings:
             "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_MEDIUM_AND_ABOVE",
             "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_MEDIUM_AND_ABOVE",
         },
-        "generation_config": {
-            "candidate_count": 1,
-            "stop_sequences": ["Human:", "Assistant:"],
-        },
     }
+
+    def __post_init__(self) -> None:
+        """Validar configurações após inicialização"""
+        if not self._GEMINI_API_KEY:
+            logger.warning("GEMINI_API_KEY não está configurada")
+        if not self._SUPABASE_URL or not self._SUPABASE_KEY:
+            logger.warning("SUPABASE_URL e/ou SUPABASE_KEY não estão configurados")
 
     @property
     def PROJECT_NAME(self) -> str:

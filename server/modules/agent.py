@@ -16,8 +16,16 @@ class KeepAIAgent:
     def __init__(self) -> None:
         """Inicializa o agente KeepAI com configurações otimizadas."""
         self.notes_manager = NotesManager()
+
+        if not settings.GEMINI_API_KEY:
+            logger.error("GEMINI_API_KEY não está configurada no ambiente")
+            raise RuntimeError(
+                "GEMINI_API_KEY não está configurada. "
+                "Configure a variável de ambiente GEMINI_API_KEY"
+            )
+
         try:
-            configure(api_key=settings.GEMINI_API_KEY or "")
+            configure(api_key=settings.GEMINI_API_KEY)
             model = GenerativeModel(
                 model_name="gemini-pro",
                 generation_config=glm.GenerationConfig(
@@ -49,9 +57,10 @@ class KeepAIAgent:
                 model=model,
                 convert_system_message_to_human=True,
             )
+            logger.info("Agente KeepAI inicializado com sucesso")
         except Exception as e:
             logger.error(f"Erro ao inicializar o modelo Gemini: {str(e)}")
-            raise RuntimeError("Falha ao inicializar o agente KeepAI")
+            raise RuntimeError(f"Falha ao inicializar o agente KeepAI: {str(e)}")
 
     def get_tools(self) -> list[Tool]:
         """Retorna a lista de ferramentas disponíveis para o agente."""
@@ -98,7 +107,8 @@ class KeepAIAgent:
         # Template do prompt com instruções mais claras
         base_prompt = (
             "Você é um assistente IA amigável e prestativo do KeepAI.\n"
-            "Seu objetivo é ajudar os usuários com tarefas de produtividade e organização.\n\n"  # noqa: E501
+            "Seu objetivo é ajudar os usuários com tarefas de produtividade "
+            "e organização.\n\n"
         )
 
         instrucoes = (
