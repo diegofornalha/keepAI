@@ -57,26 +57,26 @@ git clone https://github.com/seu-usuario/keepai.git
 cd keepai
 ```
 
-2. Inicie o container:
+2. Configure o ambiente:
+
+```bash
+cp .env.example .env
+# Configure suas variáveis de ambiente no .env
+```
+
+3. Inicie o container:
 
 ```bash
 docker compose up -d
 ```
 
-3. Acesse o aplicativo em `http://localhost:5001`
+4. Acesse o aplicativo em `http://localhost:5001`
 
-4. Para desenvolvimento com Jupyter Notebooks:
+5. Para desenvolvimento com Jupyter Notebooks:
 
 ```bash
-# Instale as dependências
 pip install jupyter notebook pandas numpy matplotlib seaborn
-
-# Configure as variáveis de ambiente
-export SUPABASE_URL=sua_url
-export SUPABASE_KEY=sua_chave
-
-# Acesse o Jupyter em http://localhost:8888/tree
-jupyter notebook
+jupyter notebook  # Acesse em http://localhost:8888/tree
 ```
 
 ## Desenvolvimento
