@@ -1,8 +1,25 @@
 # KeepAI
 
-KeepAI é um aplicativo web moderno para gerenciamento de notas, tarefas e calendário, com recursos inteligentes de IA.
+KeepAI é uma plataforma inteligente para agências de marketing digital, focada em otimizar fluxos de trabalho e aumentar a produtividade através de IA.
 
 ## Funcionalidades
+
+### Para Donos de Agência
+
+- 👥 **Gestão de Equipe**: Gerencie funcionários e suas atribuições
+- 🏢 **Gestão de Clientes**: Organize sua carteira de clientes
+- 📊 **Dashboard**: Métricas e KPIs importantes
+- 📈 **Relatórios**: Acompanhamento de performance
+
+### Para Funcionários
+
+- 📝 **Memória do Cliente**: Documentação estruturada do contexto do cliente
+- 🤖 **Chat IA**: Assistente inteligente para estratégias
+- ✨ **Gerador de Conteúdo**: Posts, blogs e campanhas otimizadas
+- 📅 **Calendário Editorial**: Organize publicações e campanhas
+- 🎯 **Banco de Ideias**: Armazene e organize insights criativos
+
+### Recursos Gerais
 
 - 📝 **Notas**: Crie e organize suas notas com suporte a markdown
 - ✅ **Tarefas**: Gerencie suas tarefas com listas personalizadas
@@ -141,38 +158,45 @@ mypy .
 - [EC_estrutura_core.md](00_core/EC_estrutura_core.md)
 - [EC_estrutura_server.md](server/EC_estrutura_server.md)
 
-## FLUXO POR ETAPA:
+## FLUXO DE TRABALHO
 
-PRODUTO: AGENTE de IA:
+### Fluxo do Usuário
 
-- Entrada via Chat
-  A[Usuário inicia chat] --> B[LangChain Agent]
-  B --> C{Análise de Intenção}
-  C --> D[Criar Nota]
-  C --> E[Criar Tarefa]
-  C --> F[Agendar Evento]
-  C --> G[Análise e Sugestões]
+```mermaid
+graph TD
+    A[Usuário inicia sessão] --> B[Dashboard Principal]
+    B --> C{Área de Trabalho}
+    C --> D[Gestão de Clientes]
+    C --> E[Gestão de Equipe]
+    C --> F[Calendário Editorial]
+    C --> G[Chat IA]
 
-  - Ações Automáticas do Agente
+    D --> H[Memória do Cliente]
+    D --> I[Relatórios]
 
-- Exemplos de Interações:
-  "Crie uma nota sobre a reunião de projeto amanhã"
-- Cria nota
-- Sugere criar tarefa relacionada
-- Adiciona ao calendário
-- Lembra de pontos importantes
-  "Preciso organizar as atividades do projeto X"
-- Analisa contexto
-- Cria estrutura de notas
-- Gera tarefas relacionadas
-- Sugere prazos e prioridades
+    G --> J[Geração de Conteúdo]
+    G --> K[Estratégias]
+    G --> L[Banco de Ideias]
+```
 
-- Recursos Adicionais
-  A cada nova funcionalidade será integrada no front
-  Atualemnte temos
-  - notas
-  - tarefas
-  - calendário
+### Interação com IA
+
+1. **Chat Inteligente**
+
+   - Análise de briefings
+   - Sugestões de estratégias
+   - Otimização de conteúdo
+
+2. **Automações**
+
+   - Geração de relatórios
+   - Calendário editorial
+   - Insights de performance
+
+3. **Gestão de Conhecimento**
+   - Documentação automática
+   - Base de conhecimento
+   - Histórico de interações
 
 ## Viabilidade Técnica
 
