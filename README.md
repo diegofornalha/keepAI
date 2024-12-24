@@ -65,6 +65,20 @@ docker compose up -d
 
 3. Acesse o aplicativo em `http://localhost:5001`
 
+4. Para desenvolvimento com Jupyter Notebooks:
+
+```bash
+# Instale as dependências
+pip install jupyter notebook pandas numpy matplotlib seaborn
+
+# Configure as variáveis de ambiente
+export SUPABASE_URL=sua_url
+export SUPABASE_KEY=sua_chave
+
+# Acesse o Jupyter em http://localhost:8888/tree
+jupyter notebook
+```
+
 ## Desenvolvimento
 
 1. Instale as dependências:
