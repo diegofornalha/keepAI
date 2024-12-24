@@ -141,6 +141,82 @@ mypy .
 - [EC_estrutura_core.md](00_core/EC_estrutura_core.md)
 - [EC_estrutura_server.md](server/EC_estrutura_server.md)
 
+## FLUXO POR ETAPA:
+
+PRODUTO: AGENTE de IA:
+
+- Entrada via Chat
+  A[Usuário inicia chat] --> B[LangChain Agent]
+  B --> C{Análise de Intenção}
+  C --> D[Criar Nota]
+  C --> E[Criar Tarefa]
+  C --> F[Agendar Evento]
+  C --> G[Análise e Sugestões]
+
+  - Ações Automáticas do Agente
+
+- Exemplos de Interações:
+  "Crie uma nota sobre a reunião de projeto amanhã"
+- Cria nota
+- Sugere criar tarefa relacionada
+- Adiciona ao calendário
+- Lembra de pontos importantes
+  "Preciso organizar as atividades do projeto X"
+- Analisa contexto
+- Cria estrutura de notas
+- Gera tarefas relacionadas
+- Sugere prazos e prioridades
+
+- Recursos Adicionais
+  A cada nova funcionalidade será integrada no front
+  Atualemnte temos
+  - notas
+  - tarefas
+  - calendário
+
+## Viabilidade Técnica
+
+1. O projeto está preparado para implementar este fluxo pois já possui:
+
+- Estrutura Base
+- LangChain configurado (linhas 47-54 em server/EC_estrutura_server.md)
+- Modelos de dados flexíveis
+- API REST robusta
+
+2. Componentes Necessários
+
+- Supabase para persistência
+- FastAPI para endpoints
+- Gemini Pro para IA
+- Templates prontos
+
+3. Integrações Possíveis
+
+- Clerk para autenticação
+- FullCalendar para agenda
+- Markdown para notas
+- WebSockets para real-time
+
+## Próximos Passos
+
+1. Expandir AutonomousNotes
+
+- Adicionar mais ferramentas
+- Melhorar contexto
+- Implementar workflows
+
+2. Criar Conectores
+
+- Entre notas e tarefas
+- Com calendário
+- Para documentos
+
+3. Melhorar IA
+
+- Treinar para contextos específicos
+- Adicionar memória de longo prazo
+- Implementar sugestões proativas
+
 ## Licença
 
 Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
