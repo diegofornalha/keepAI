@@ -11,6 +11,34 @@ KeepAI é um aplicativo web moderno para gerenciamento de notas, tarefas e calen
 - 🔄 **Sincronização**: Seus dados sempre atualizados em todos os dispositivos
 - 🌙 **Tema Escuro**: Interface adaptável para melhor conforto visual
 
+## Scripts Utilitários
+
+O projeto inclui scripts úteis para desenvolvimento e manutenção:
+
+### Limpeza de Arquivos Temporários
+
+Para manter o projeto organizado, use o script de limpeza:
+
+```bash
+python 00_core/04_scripts/cleanup.py
+```
+
+Este script remove automaticamente:
+
+- Arquivos de cache Python (`__pycache__`, `.pyc`, etc.)
+- Ambientes virtuais (`.venv`, `venv`)
+- Caches de ferramentas (`.mypy_cache`, `.pytest_cache`, etc.)
+- Arquivos de build (`*.egg-info`, `build`, `dist`)
+- Arquivos temporários de IDEs
+- Arquivos de log
+- Outros arquivos temporários do sistema
+
+O script é seguro e:
+
+- Protege diretórios importantes (`.git`, `static`, etc.)
+- Mostra feedback detalhado
+- Trata erros graciosamente
+
 ## Arquitetura
 
 O KeepAI segue uma arquitetura modular e limpa:
