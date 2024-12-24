@@ -72,12 +72,43 @@ docker compose up -d
 
 4. Acesse o aplicativo em `http://localhost:5001`
 
-5. Para desenvolvimento com Jupyter Notebooks:
+## Scripts Utilitários
+
+### Configurar URLs do Supabase
+
+```bash
+python 00_core/04_scripts/setup_env.py
+```
+
+Configura as URLs necessárias para conexão com o Supabase:
+
+- `DATABASE_URL`: Conexão direta para a aplicação
+- `SUPABASE_DB_URL`: Alias para scripts de migração
+
+### Migrações do Banco de Dados
+
+Para executar e testar as migrações, use o Jupyter Notebook:
+
+1. Instale as dependências:
 
 ```bash
 pip install jupyter notebook pandas numpy matplotlib seaborn
+```
+
+2. Inicie o Jupyter:
+
+```bash
 jupyter notebook  # Acesse em http://localhost:8888/tree
 ```
+
+3. Abra o notebook `00_core/02_notebooks/01_test_migrations.ipynb`
+
+O notebook usa LangChain + Gemini Pro para:
+
+- Executar as migrações em ordem
+- Verificar se cada migração foi bem sucedida
+- Validar o estado final do banco
+- Fornecer feedback em linguagem natural
 
 ## Desenvolvimento
 
