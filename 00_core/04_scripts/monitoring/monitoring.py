@@ -1,5 +1,6 @@
 import time
-from typing import Any, cast
+from typing import Any, Optional, cast
+from prometheus_client import Gauge as PrometheusGauge  # type: ignore[import-not-found]
 
 try:
     import psutil
@@ -14,14 +15,14 @@ except ImportError:
 
 
 # Métricas do Prometheus
-if Gauge:
+cpu_usage: Optional[PrometheusGauge] = None
+memory_usage: Optional[PrometheusGauge] = None
+disk_usage: Optional[PrometheusGauge] = None
+
+if Gauge is not None:
     cpu_usage = Gauge("cpu_usage_percent", "CPU usage in percent")
     memory_usage = Gauge("memory_usage_percent", "Memory usage in percent")
     disk_usage = Gauge("disk_usage_percent", "Disk usage in percent")
-else:
-    cpu_usage = None
-    memory_usage = None
-    disk_usage = None
 
 
 def collect_metrics() -> None:
@@ -35,7 +36,7 @@ def collect_metrics() -> None:
 def main() -> None:
     """Função principal do monitoramento"""
     # Inicia o servidor HTTP do Prometheus na porta 8000
-    if start_http_server:
+    if start_http_server is not None:
         start_http_server(8000)
 
     while True:
