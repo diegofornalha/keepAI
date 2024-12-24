@@ -1,9 +1,10 @@
 import os
 import sys
+from typing import List
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# Adicionar o diretório raiz ao PATH para importar os modelos
+# Adicionar diretório raiz ao PATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Carregar variáveis de ambiente
@@ -12,6 +13,15 @@ load_dotenv()
 # Configuração do Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+# Lista de arquivos de migração em ordem
+MIGRATION_FILES: List[str] = [
+    "00_create_schemas.sql",
+    "01_create_notes_table.sql",
+    "02_create_profiles_table.sql",
+    "03_create_ai_tables.sql",
+    "04_create_tasks_tables.sql",
+]
 
 
 def get_supabase_client() -> Client:
@@ -22,24 +32,14 @@ def get_supabase_client() -> Client:
 
 
 def run_migrations() -> None:
-    """Executa as migrações no Supabase
-
-    Como o Supabase gerencia as migrações através do dashboard ou CLI,
-    este arquivo serve apenas como referência para a configuração.
-    Para executar migrações, use:
-    1. Dashboard do Supabase
-    2. Supabase CLI
-    3. Migrations SQL direto no editor SQL
-    """
-    print(
-        """
-    O Supabase não usa o Alembic para migrações.
-    Por favor, use uma das seguintes opções:
-    1. Dashboard do Supabase
-    2. Supabase CLI
-    3. Migrations SQL direto no editor SQL
-    """
-    )
+    """Executa as migrações no Supabase"""
+    print("Para executar as migrações, use uma das opções:")
+    print("1. Dashboard do Supabase")
+    print("2. Supabase CLI")
+    print("3. Editor SQL do Supabase")
+    print("\nArquivos de migração em ordem:")
+    for file in MIGRATION_FILES:
+        print(f"- {file}")
 
 
 if __name__ == "__main__":

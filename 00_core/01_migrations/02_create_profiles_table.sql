@@ -1,5 +1,5 @@
--- Criar tabela de perfis dos usuários
-CREATE TABLE public.profiles (
+-- Mover para schema users
+CREATE TABLE users.profiles (
     id uuid REFERENCES auth.users PRIMARY KEY,
     username text,
     first_name text,
@@ -10,8 +10,8 @@ CREATE TABLE public.profiles (
     updated_at timestamptz DEFAULT now()
 );
 
--- Criar função para atualizar o timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+-- Função para atualizar timestamp
+CREATE OR REPLACE FUNCTION users.update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = now();
@@ -19,33 +19,33 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Criar trigger para atualizar o timestamp automaticamente
+-- Trigger para timestamp
 CREATE TRIGGER update_profiles_updated_at
-    BEFORE UPDATE ON public.profiles
+    BEFORE UPDATE ON users.profiles
     FOR EACH ROW
-    EXECUTE PROCEDURE update_updated_at_column();
+    EXECUTE PROCEDURE users.update_updated_at_column();
 
 -- Habilitar RLS
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users.profiles ENABLE ROW LEVEL SECURITY;
 
--- Criar políticas de acesso
+-- Políticas de acesso
 CREATE POLICY "Usuários podem visualizar seu próprio perfil" 
-    ON public.profiles FOR SELECT 
+    ON users.profiles FOR SELECT 
     USING (auth.uid() = id);
 
 CREATE POLICY "Usuários podem atualizar seu próprio perfil" 
-    ON public.profiles FOR UPDATE 
+    ON users.profiles FOR UPDATE 
     USING (auth.uid() = id);
 
 CREATE POLICY "Usuários podem inserir seu próprio perfil" 
-    ON public.profiles FOR INSERT 
+    ON users.profiles FOR INSERT 
     WITH CHECK (auth.uid() = id);
 
--- Criar função para inserir perfil automaticamente quando um novo usuário é criado
-CREATE OR REPLACE FUNCTION public.handle_new_user()
+-- Função para novo usuário
+CREATE OR REPLACE FUNCTION users.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-    INSERT INTO public.profiles (id, email, username, first_name, last_name, image_url)
+    INSERT INTO users.profiles (id, email, username, first_name, last_name, image_url)
     VALUES (
         new.id,
         new.raw_user_meta_data->>'email',
@@ -58,7 +58,8 @@ BEGIN
 END;
 $$ language plpgsql security definer;
 
--- Criar trigger para criar perfil automaticamente
+-- Trigger para criar perfil
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE PROCEDURE users.handle_new_user(); 
     FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user(); 
