@@ -15,6 +15,20 @@ KeepAI é um aplicativo web moderno para gerenciamento de notas, tarefas e calen
 
 O projeto inclui scripts úteis para desenvolvimento e manutenção:
 
+### Setup do Banco de Dados
+
+Para configurar o banco de dados Supabase:
+
+```bash
+python 00_core/04_scripts/setup_database.py
+```
+
+Este script:
+
+- Cria as tabelas necessárias no Supabase
+- Configura as colunas e relacionamentos
+- Requer as variáveis de ambiente `SUPABASE_URL` e `SUPABASE_KEY`
+
 ### Limpeza de Arquivos Temporários
 
 Para manter o projeto organizado, use o script de limpeza:
