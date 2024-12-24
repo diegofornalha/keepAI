@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 setup(
     name="keepai",
     version="0.1",
-    package_dir={"": "03_server"},
-    packages=find_packages(where="03_server"),
+    package_dir={"": "server"},
+    packages=find_packages(where="server"),
     install_requires=[
         "flask",
         "flask-cors",
