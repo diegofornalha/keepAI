@@ -17,15 +17,15 @@ class KeepAIAgent:
         """Inicializa o agente KeepAI com configurações otimizadas."""
         self.notes_manager = NotesManager()
 
-        if not settings.GEMINI_API_KEY:
-            logger.error("GEMINI_API_KEY não está configurada no ambiente")
+        if not settings.GOOGLE_API_KEY:
+            logger.error("GOOGLE_API_KEY não está configurada no ambiente")
             raise RuntimeError(
-                "GEMINI_API_KEY não está configurada. "
+                "GOOGLE_API_KEY não está configurada. "
                 "Configure a variável de ambiente GOOGLE_API_KEY"
             )
 
         try:
-            configure(api_key=settings.GEMINI_API_KEY)
+            configure(api_key=settings.GOOGLE_API_KEY)
 
             generation_config = glm.GenerationConfig(
                 temperature=settings.GEMINI_CONFIG["temperature"],
@@ -47,7 +47,7 @@ class KeepAIAgent:
             self.llm = ChatGoogleGenerativeAI(
                 model=settings.GEMINI_CONFIG["model"],
                 convert_system_message_to_human=True,
-                google_api_key=settings.GEMINI_API_KEY,
+                google_api_key=settings.GOOGLE_API_KEY,
                 generation_config=generation_config,
                 safety_settings=safety_settings,
             )
