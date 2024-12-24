@@ -8,10 +8,10 @@ def load_env(env_path: str = ".env") -> Dict[str, str]:
     """Carrega as variáveis do arquivo .env."""
     env_vars = {}
     if os.path.exists(env_path):
-        with open(env_path, "r") as f:
+        with open(env_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if line and not line.startswith("#"):
+                if line and not line.startswith("#") and "=" in line:
                     key, value = line.split("=", 1)
                     env_vars[key.strip()] = value.strip().strip('"')
     return env_vars
@@ -19,7 +19,7 @@ def load_env(env_path: str = ".env") -> Dict[str, str]:
 
 def save_env(env_vars: Dict[str, str], env_path: str = ".env") -> None:
     """Salva as variáveis no arquivo .env."""
-    with open(env_path, "w") as f:
+    with open(env_path, "w", encoding="utf-8") as f:
         for key, value in sorted(env_vars.items()):
             f.write(f'{key}="{value}"\n')
 
@@ -33,10 +33,13 @@ def setup_supabase_urls(
     if not password:
         password = input("Digite sua senha do Supabase: ")
 
+    # Conexão direta para a aplicação principal
     base_url = f"postgresql://postgres.{project_ref}:{password}@{region}"
+    db_url = f"{base_url}.supabase.co:5432/postgres"
+
     return {
-        "DATABASE_URL": f"{base_url}.pooler.supabase.com:6543/postgres?pgbouncer=true",
-        "DIRECT_URL": f"{base_url}.pooler.supabase.com:5432/postgres",
+        "DATABASE_URL": db_url,  # Conexão direta para a aplicação
+        "SUPABASE_DB_URL": db_url,  # Alias para scripts
     }
 
 
@@ -53,6 +56,9 @@ def main() -> None:
     save_env(env_vars)
     print("✅ Arquivo .env atualizado com sucesso!")
     print("🔑 As URLs do Supabase foram configuradas.")
+    print("\nURLs configuradas:")
+    print("- DATABASE_URL: Conexão direta para a aplicação")
+    print("- SUPABASE_DB_URL: Alias para scripts de migração")
 
 
 if __name__ == "__main__":
